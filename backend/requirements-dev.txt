@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest
+httpx
+httpx2>=2,<3
+moto
+ruff
+uvicorn
