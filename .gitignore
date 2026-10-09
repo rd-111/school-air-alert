@@ -1,0 +1,23 @@
+# Environment variables and secrets
+
+.env
+.env.*
+!.env.example
+.aws/
+credentials
+secrets.*
+
+# Python
+
+**pycache**/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated files
+
+*.log
+.DS_Store
