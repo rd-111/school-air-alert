@@ -9,7 +9,7 @@ secrets.*
 
 # Python
 
-**pycache**/
+**/__pycache__/
 *.py[cod]
 .venv/
 venv/
@@ -21,3 +21,11 @@ htmlcov/
 
 *.log
 .DS_Store
+
+# Python virtual environments and caches
+backend/.venv/
+backend/.venv-*/
+backend/.ruff_cache/
+backend/.pytest_cache/
+__pycache__/
+*.py[cod]
