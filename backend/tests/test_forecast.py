@@ -59,13 +59,14 @@ def test_two_day_response_selects_only_requested_local_school_date(monkeypatch):
         for hour in range(7, 15)
     ]
     calls = []
+    retrieved_at = datetime.now(timezone.utc).replace(microsecond=0)
 
     def fetch(_latitude, _longitude, **options):
         calls.append(options["forecast_days"])
         return {
             "timezone": "Asia/Kolkata",
             "hourly": hourly,
-            "retrieved_at": "2026-10-09T13:30:00+00:00",
+            "retrieved_at": retrieved_at.isoformat(),
         }
 
     monkeypatch.setattr(forecast, "fetch_hourly_pm25", fetch)
@@ -81,7 +82,7 @@ def test_two_day_response_selects_only_requested_local_school_date(monkeypatch):
     assert result.school_hours_summary.status == "GREEN"
     assert result.school_hours_summary.average_pm25 == 30
     assert all(point.time.date().isoformat() == "2026-10-10" for point in result.hourly)
-    assert result.retrieved_at.isoformat() == "2026-10-09T13:30:00+00:00"
+    assert result.retrieved_at == retrieved_at
 
 
 def test_two_day_forecast_with_missing_tomorrow_reading_is_unknown(monkeypatch):

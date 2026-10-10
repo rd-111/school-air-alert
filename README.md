@@ -175,15 +175,11 @@ npm test -- --run
 npm run build
 ```
 
-In the current local environment the full backend test command can hang in
-synchronous Starlette `TestClient` requests because worker-thread results do
-not wake the event loop reliably. The cause is not established; the route tests
-remain enabled. The following non-hanging subset reported **76 passed, 7
-deselected** on 2026-10-10; it is **not** a full-suite pass:
-
-```sh
-python -m pytest -q -k 'not test_forecast_endpoint_validates_coordinates_and_returns_structured_error and not test_forecast_endpoint_provider_failure_is_generic and not test_forecast_endpoint_timeout_preserves_gateway_timeout_status and not test_health_route_is_versioned_and_uses_response_model and not test_unknown_route_returns_standard_404_error and not test_unexpected_errors_do_not_return_exception_details and not test_settings_can_be_overridden_as_a_fastapi_dependency'
-```
+The full backend suite passed locally with **94 passed** on 2026-10-10. In a
+restricted execution sandbox, synchronous Starlette `TestClient` requests may
+hang because the sandbox denies asyncio's Unix socketpair wakeup send with
+`EPERM`. This is an environment restriction; the same seven route tests and
+the full suite passed when run outside that sandbox. Do not exclude those tests.
 
 Use Node.js 22.12 or newer. `npm ci` uses the committed
 `frontend/package-lock.json`. CI is configured for Python 3.12 and Node 22.12;
@@ -206,6 +202,32 @@ that the template will deploy.
 Deployment is not verified. Only after reviewing the template, supplying
 approved parameters, and explicitly authorizing deployment should you run
 `sam deploy --guided`.
+
+## Troubleshooting
+
+- **CORS in the browser:** run the backend on the URL in `VITE_API_URL`, and
+  open the Vite origin shown in its terminal. The backend allows ports 5173,
+  5174, and 5175 on `localhost` and `127.0.0.1`. For another frontend origin,
+  set `CORS_ORIGINS` to a comma-separated list of exact origins, restart the
+  backend, and do not use `*`.
+- **Live mode says the forecast could not load:** in `frontend/.env`, check
+  `VITE_DATA_MODE=live` and `VITE_API_URL=http://localhost:8000` (or the
+  backend's selected port), then restart Vite. Check
+  `http://localhost:8000/api/v1/health` and the forecast URL below. Live mode
+  requires internet access to Open-Meteo; provider errors are shown instead of
+  silently switching to demo data.
+- **Missing configuration:** compare local values with `frontend/.env.example`
+  and `backend/.env.example`. Keep tokens and credentials only in local or
+  deployment secret configuration; never copy them into Vite variables.
+- **Port is already in use:** inspect it with `ss -ltnp` or `lsof -i :8000`.
+  Do not stop a process you do not recognize. You can start FastAPI on another
+  port, for example `python -m uvicorn app.main:app --reload --port 8017`, and
+  set `VITE_API_URL=http://localhost:8017` before restarting Vite.
+- **Backend tests appear to hang:** in a restricted execution sandbox, asyncio's
+  cross-thread socketpair wakeup can be denied with `EPERM`, leaving Starlette
+  `TestClient` waiting for a callback. The full suite passed when run outside
+  that sandbox: `python -m pytest -q` (94 passed). Run the command from the
+  backend directory in a normal local terminal rather than filtering tests.
 
 ## Teammate smoke-test guide
 
