@@ -4,6 +4,18 @@ Read the root `AGENTS.md`, `docs/AGENTS.md`, and this file before a feature task
 
 ## 0. Product summary
 
+### Implementation status note (2026-10-10)
+
+The repository has local implementations for the forecast, planner, daily
+alerts, SNS/email, history and school APIs, sensitive mode, Telegram bot,
+optional Bedrock messages, dashboard, monthly report, poster, and docs. F21's
+19:00 IST tomorrow-forecast path is implemented locally. F19 remains blocked
+until an authoritative observed-data source and date/station matching rules are
+approved. F20 remains blocked until its wind source, upwind area, and hotspot
+cluster rule are defined. AWS resources, real provider calls, and delivery
+remain unverified because nothing has been deployed. See README.md for setup,
+test results, and limitations.
+
 Every morning at 06:00 IST, the system forecasts PM2.5 for school hours (07:00–15:00), decides GREEN / YELLOW / RED, finds the best and worst hours for outdoor activity, and sends plain-language alerts to principals and parents by email and Telegram. A React website shows status, a 24-hour chart, a monthly report card, and a printable poster. Anyone can also check air quality for their location without signing up.
 
 Users include principals or teachers deciding activities, parents, and parents of children with asthma or allergies who may want stricter alerts. Do not build hardware sensors, machine-learning forecasts, accounts or passwords, payments, native mobile apps, SMS, or maps/heatmaps of many cities.
@@ -208,17 +220,47 @@ Compare yesterday's forecast with what occurred (check Open-Meteo historical opt
 - **Target areas:** backend services/repositories and tests, status/history API, and frontend report UI as needed.
 - **Clarification for later:** define which measured/observed source is authoritative and how matching dates are handled before implementation; do not present forecast data as observed truth.
 
+**Current implementation note (2026-10-09):** not implemented. Open-Meteo
+forecast history/reanalysis is model-derived and is not an approved authoritative
+school-site observation record. Approval is needed for the observation provider,
+station-to-school matching, timezone/date alignment, missing-data handling, and
+the comparison definition before this feature can report accuracy. Open-Meteo
+describes its Historical Forecast API as archived model runs initialized from
+measurements, while its Air Quality API `past_days` returns archived forecasts;
+neither establishes the agreed school-site observation record. See the [Open-Meteo
+Historical Forecast API](https://open-meteo.com/en/docs/historical-forecast-api)
+and [Air Quality API](https://open-meteo.com/en/docs/air-quality-api).
+
 ### F20. Smoke-source hint
 
 Use NASA FIRMS hotspots from the last 24 hours upwind of the school. If a cluster exists, add: “Smoke from nearby fires is likely contributing.” Fall back silently when FIRMS is unavailable.
 - **Target areas:** isolated backend service/provider, configuration, and tests; integrate with alert messages only after verified.
 - **Clarification for later:** the fixed architecture currently names Open-Meteo and Geocoding as air-data sources, while F20 adds NASA FIRMS and a map key. Confirm this additional external provider and credential/configuration approach before implementation; do not add a service or key without approval.
 
+**Current implementation note (2026-10-09):** not implemented. NASA FIRMS
+provides satellite hotspot detections, but the project has no configured wind
+direction source or approved upwind distance, acquisition-time rule, confidence
+filter, or cluster definition. A hotspot is not evidence that a fire is active
+at a school or that it caused unsafe air. These decisions and key configuration
+need approval before displaying the specified smoke sentence. NASA's [Area API
+documentation](https://firms.modaps.eosdis.nasa.gov/api/area) requires a free
+MAP_KEY, a source, a bounding area, and day range; it returns satellite hotspot
+attributes including coordinates and acquisition date/time. This is not a
+ready-made upwind smoke attribution.
+
 ### F21. Evening “tomorrow” alert
 
 Add a second schedule at 19:00 IST to send tomorrow's forecast status, reusing F1–F4 with `forecast_days=2`.
 - **Target areas:** root `template.yaml`, `backend/handlers/daily_check.py`, and backend tests.
 - **Clarification for later:** the fixed architecture explicitly specifies the 06:00 schedule. Confirm the additional schedule and tomorrow-message format before implementation.
+
+**Current implementation note (2026-10-09):** implemented locally as a 19:00
+Asia/Kolkata schedule using a two-day Open-Meteo forecast and a tomorrow label.
+The event's scheduled time anchors the target date across retries; notification
+claims reduce duplicate sends, and the evening run does not write a second
+same-day History row. Asia/Kolkata has no daylight-saving transitions; local
+date selection is covered at the UTC/India midnight boundary. SAM deployment
+and live delivery are not verified.
 
 ## 6. Recommended build order
 

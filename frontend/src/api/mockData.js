@@ -6,6 +6,7 @@ const values = [
 export const mockDashboardData = {
   schoolName: "Demo School",
   status: "GREEN",
+  advice: "Normal outdoor activities are fine.",
   averagePm25: 32,
   peakPm25: 45,
   hourly: values.map((pm25, hour) => ({
@@ -14,4 +15,8 @@ export const mockDashboardData = {
   })),
   bestWindow: { start: "11:00", end: "12:00", label: "11:00–12:00" },
   worstWindow: { start: "17:00", end: "18:00", label: "17:00–18:00" },
+  noSuitableWindow: false,
+  activityGuidance: ["pe", "sports", "recess", "assembly", "bus_wait"].map(
+    (activity) => ({ activity, guidance_code: "GENERAL_POLICY" }),
+  ),
 };

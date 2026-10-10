@@ -2,10 +2,11 @@ const statusIcons = {
   GREEN: "✅",
   YELLOW: "⚠️",
   RED: "🏠",
+  UNKNOWN: "ℹ️",
 };
 
 export default function StatusCard({ data, labels }) {
-  const status = ["GREEN", "YELLOW", "RED"].includes(data.status) ? data.status : "GREEN";
+  const status = ["GREEN", "YELLOW", "RED", "UNKNOWN"].includes(data.status) ? data.status : "UNKNOWN";
   const statusText = labels.status[status.toLowerCase()];
 
   return (
@@ -18,9 +19,9 @@ export default function StatusCard({ data, labels }) {
         </div>
       </div>
       <div className="status-reading">
-        <span className="reading-number">{data.averagePm25}</span>
+        <span className="reading-number">{data.averagePm25 ?? labels.noReading}</span>
         <span className="reading-unit">{labels.averagePm25} ({labels.pm25Unit})</span>
-        <span className="peak-reading">{labels.peakPm25}: {data.peakPm25} {labels.pm25Unit}</span>
+        <span className="peak-reading">{labels.peakPm25}: {data.peakPm25 ?? labels.noReading} {data.peakPm25 == null ? "" : labels.pm25Unit}</span>
       </div>
       <p className="status-advice">{labels.advice[status.toLowerCase()]}</p>
     </section>

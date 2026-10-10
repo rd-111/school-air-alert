@@ -1,0 +1,240 @@
+# School Air Alert
+
+A responsive school dashboard for hourly PM2.5 forecast decision support.
+It shows GREEN/YELLOW/RED project-policy labels, hourly values, and the lowest
+and highest forecast windows during school hours. It does not guarantee safety
+or provide medical advice.
+
+## Architecture and status
+
+- Frontend: JavaScript, React 18, Vite, React Router, Recharts, plain responsive CSS.
+- Backend: Python 3.12, FastAPI, Pydantic, and Mangum Lambda adapter.
+- Deployment architecture (defined, not deployed): Amplify Hosting, API Gateway
+  HTTP API, Lambda, DynamoDB, EventBridge Scheduler, and SNS. Telegram uses its
+  HTTPS Bot API; Bedrock messages are optional.
+- Live provider: Open-Meteo Air Quality API using CAMS Global forecast data.
+- Daily processing: a 06:00 Asia/Kolkata SAM schedule runs the school forecast,
+  writes an idempotent History row, and attempts regular and stricter sensitive
+  SNS notifications independently for each school.
+- Evening processing: a separate 19:00 Asia/Kolkata schedule requests a
+  two-day forecast, selects tomorrow's local school hours, and sends a
+  tomorrow-labelled alert. Notification-run claims reduce duplicate sends.
+  This is implemented locally but has not been deployed or verified against
+  EventBridge, DynamoDB, SNS, or Telegram.
+- Versioned school endpoints provide school listing/registration, email
+  subscription requests, current forecast status, and up to 90 days of saved
+  forecast history.
+- The frontend also includes school forms, a forecast-history report, and a
+  print-ready notice poster.
+- The dashboard defaults to clearly labelled demo data. Live forecast mode is
+  available through the backend API.
+- `template.yaml` defines the HTTP API, school/history/notification-run tables,
+  and morning/evening schedules. It has not been validated with SAM or deployed
+  to AWS.
+
+## Requirements
+
+- Python 3.12
+- Node.js 22.12 or newer and npm (required by the configured Vite/Vitest versions)
+
+## Local setup
+
+Install backend dependencies in a Python 3.12 virtual environment using the
+repository requirements files, then run:
+
+```sh
+cd backend
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+USE_MEMORY_DB=true python -m uvicorn app.main:app --reload --port 8000
+```
+
+In another terminal:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open the local Vite URL printed by the dev server. The default mode is demo.
+
+## Demo and live forecast modes
+
+Copy `frontend/.env.example` to `frontend/.env` for local changes. Keep
+`VITE_DATA_MODE=demo` for illustrative data. To request live provider forecasts,
+set:
+
+```text
+VITE_DATA_MODE=live
+VITE_API_URL=http://localhost:8000
+```
+
+Vite variables are public browser configuration; do not put secrets in them.
+Live mode never silently falls back to demo data. The location form accepts
+latitude and longitude; Mumbai is only the displayed example/default.
+Set `VITE_TELEGRAM_BOT_USERNAME` to the public Telegram bot username to show its
+link on the dashboard. This is public configuration; never use the bot token
+there.
+
+The backend accepts:
+
+```text
+GET /api/v1/forecast?latitude=19.0760&longitude=72.8777
+GET /api/v1/health
+GET /api/v1/schools
+POST /api/v1/schools
+POST /api/v1/subscribe
+GET /api/v1/status?school_id=...
+GET /api/v1/history?school_id=...&days=30
+```
+
+The forecast response identifies `data_type: forecast`, reports the retrieval
+timestamp and source, and uses the configured school-hours policy. The default
+school period is 07:00–14:00 local time, following the current F1 requirements.
+
+Backend environment values are listed in `backend/.env.example`. Configure
+`CORS_ORIGINS` to a comma-separated allowlist containing the exact local or
+Amplify website origins. For local job/repository development, set
+`USE_MEMORY_DB=true`; it uses an in-memory demo school with no SNS topics, so it
+does not send notifications. Provider requests have a ten-second timeout, one
+retry, and a short in-process per-location/day-count cache. Old or incomplete
+forecasts are marked UNKNOWN; live mode does not silently substitute mock data.
+
+School SNS topics are created with names beginning
+`school-air-alert-<school-id>-` so the SAM policy limits publishing and topic
+management to this application's topic name prefix. Email subscriptions remain
+pending until the recipient confirms through SNS.
+
+Telegram webhook configuration uses `TELEGRAM_TOKEN` and `TELEGRAM_SECRET`.
+The SAM template marks both deployment parameters as `NoEcho`; do not put their
+values in Git. The webhook requires the `X-Telegram-Bot-Api-Secret-Token` header.
+Supported bot commands are `/start`, `/schools`, `/subscribe <school_id>`,
+`/sensitive on|off`, `/today`, and `/stop`. Telegram and SNS delivery have not
+been verified against live services.
+
+Optional AI message generation uses `BEDROCK_MODEL`. For SAM, provide both the
+model identifier and its exact permitted ARN; when no model is configured,
+messages use the deterministic template. Bedrock calls have not been run.
+
+## Provider and attribution
+
+The backend requests `hourly=pm2_5`, one forecast day, India time, and the CAMS
+global domain. See [Open-Meteo Air Quality API documentation](https://open-meteo.com/en/docs/air-quality-api).
+The response credits Open-Meteo and CAMS, links to both sources, and reports
+CC BY 4.0. The public free API is for non-commercial use and has request limits;
+check the [Open-Meteo terms](https://open-meteo.com/en/terms) before use. CAMS
+Global is a forecast model (about 45 km resolution with native three-hourly
+updates), not a school-site sensor or real-time observation.
+
+## Classification
+
+Defaults preserve the prototype's regular thresholds (GREEN ≤60, YELLOW ≤120,
+otherwise RED) and sensitive thresholds (GREEN ≤40, YELLOW ≤90, otherwise RED)
+in µg/m³. They are placeholders for hourly school decision support, not official
+CPCB AQI categories. See [threshold documentation](docs/thresholds.md).
+The activity panel gives general policy guidance only: incomplete forecasts
+receive no recommendation, RED requests school-policy review, and other
+statuses defer to school policy. It does not invent different numeric rules for
+PE, sports, recess, assemblies, or bus waiting.
+
+## F19–F21 status
+
+- **F19 accuracy meter: blocked, not implemented.** A forecast archive or
+  reanalysis product is not an approved authoritative observation source.
+  Select an observed dataset, station-matching method, and date-alignment rules
+  before comparing forecast status with what occurred.
+- **F20 smoke-source hint: blocked, not implemented.** NASA FIRMS supplies
+  satellite hotspot detections. The project has no agreed wind-direction
+  provider, definition of “upwind,” hotspot cluster rule, or approved key
+  configuration. A detection alone cannot establish an active fire at a school
+  or attribute local air quality to smoke.
+- **F21 evening alert: implemented locally, infrastructure unverified.** The
+  19:00 IST event requests `forecast_days=2`, selects tomorrow in Asia/Kolkata,
+  labels the message as tomorrow, and does not write another same-day History
+  row. EventBridge/DynamoDB/SNS/Telegram behavior still needs deployment-level
+  verification.
+
+The outstanding F19/F20 data and policy decisions are listed in
+[`docs/pending-decisions.md`](docs/pending-decisions.md). No accuracy score or
+smoke-contribution message is currently displayed.
+
+Notification claims reduce duplicate retries. If an external publish succeeds
+but its response times out, the outcome is uncertain; live delivery semantics
+are not verified.
+
+## Checks
+
+```sh
+cd backend
+python -m pytest -q
+ruff check .
+cd ../frontend
+npm test -- --run
+npm run build
+```
+
+In the current local environment the full backend test command can hang in
+synchronous Starlette `TestClient` requests because worker-thread results do
+not wake the event loop reliably. The cause is not established; the route tests
+remain enabled. The following non-hanging subset reported **76 passed, 7
+deselected** on 2026-10-10; it is **not** a full-suite pass:
+
+```sh
+python -m pytest -q -k 'not test_forecast_endpoint_validates_coordinates_and_returns_structured_error and not test_forecast_endpoint_provider_failure_is_generic and not test_forecast_endpoint_timeout_preserves_gateway_timeout_status and not test_health_route_is_versioned_and_uses_response_model and not test_unknown_route_returns_standard_404_error and not test_unexpected_errors_do_not_return_exception_details and not test_settings_can_be_overridden_as_a_fastapi_dependency'
+```
+
+Use Node.js 22.12 or newer. `npm ci` uses the committed
+`frontend/package-lock.json`. CI is configured for Python 3.12 and Node 22.12;
+no remote CI run is claimed here.
+
+Provider, SNS, Telegram, and Bedrock network calls are mocked in tests. Live
+forecast mode itself needs a working internet connection and the backend.
+
+SAM validation/build commands (not run here):
+
+```sh
+sam validate --lint --template-file template.yaml
+sam build --template-file template.yaml
+```
+
+The SAM CLI is not installed in the current environment, so these local
+template checks remain to be run. YAML syntax parsing alone does not establish
+that the template will deploy.
+
+Deployment is not verified. Only after reviewing the template, supplying
+approved parameters, and explicitly authorizing deployment should you run
+`sam deploy --guided`.
+
+## Teammate smoke-test guide
+
+Run the backend and frontend in separate terminals using the setup above. In
+default demo mode, check the dashboard, language selector, hourly chart,
+activity guidance, report, poster, and location form without AWS credentials.
+The poster route accepts `?school_id=<id>` and its Print button opens the
+browser print dialog. For live mode, configure `VITE_DATA_MODE=live` and
+`VITE_API_URL`, then query the forecast endpoint above with valid coordinates;
+confirm it identifies forecast data and includes its source/retrieval time.
+
+School registration and subscriptions can be exercised with the local
+memory-backed backend, but it is not persistent and does not deliver email.
+Telegram and SNS delivery require external configuration and credentials and
+are not verified. Bedrock is optional; without a model setting, the deterministic
+template is used. Keep secrets out of frontend variables and use no real student
+or parent information in demos.
+
+## Known limitations
+
+- Authentication, email unsubscribe management, and live Telegram/SNS delivery
+  have not been implemented or verified. Telegram `/stop` removes bot
+  subscriptions; SNS email subscribers can use SNS's confirmation/unsubscribe
+  flow.
+- School recommendations use a simplified placeholder policy and incomplete
+  forecast hours may limit window selection.
+- Coordinates are entered manually; no geocoding or maps provider is used.
+- API caching is process-local, so separate Lambda instances do not share it.
+- AWS deployment and production CORS origins have not been verified.
+- DynamoDB/SNS integration tests use mocks; no AWS account was accessed.
+- F19 accuracy comparison and F20 smoke-source hint are not implemented pending
+  authoritative data and safety-policy decisions.

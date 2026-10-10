@@ -1,0 +1,198 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: School Air Alert API and daily forecast job.
+
+Parameters:
+  TelegramToken:
+    Type: String
+    NoEcho: true
+    Description: Telegram bot token; provide at deployment time.
+  TelegramSecret:
+    Type: String
+    NoEcho: true
+    Description: Telegram webhook secret; provide at deployment time.
+  BedrockModel:
+    Type: String
+    Default: ''
+    Description: Optional Bedrock model or inference-profile identifier.
+  BedrockModelArn:
+    Type: String
+    Default: arn:aws:bedrock:ap-south-1::foundation-model/none
+    Description: Exact model ARN allowed to be invoked; default grants no model access.
+  FrontendAllowedOrigins:
+    Type: CommaDelimitedList
+    Default: http://localhost:5173
+    Description: Exact browser origins allowed to call the API.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    CodeUri: backend/
+    MemorySize: 256
+    Timeout: 15
+    Environment:
+      Variables:
+        USE_MEMORY_DB: 'false'
+        SCHOOLS_TABLE: !Ref SchoolsTable
+        SUBSCRIBERS_TABLE: !Ref SubscribersTable
+        NOTIFICATION_RUNS_TABLE: !Ref NotificationRunsTable
+        HISTORY_TABLE: !Ref HistoryTable
+        CORS_ORIGINS: !Join [",", !Ref FrontendAllowedOrigins]
+
+Resources:
+  ForecastApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins: !Ref FrontendAllowedOrigins
+        AllowMethods: [GET, POST, OPTIONS]
+        AllowHeaders: [Accept, Content-Type, X-Telegram-Bot-Api-Secret-Token]
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 60
+        ThrottlingRateLimit: 30
+
+  ForecastApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.lambda_api.handler
+      Environment:
+        Variables:
+          TELEGRAM_TOKEN: !Ref TelegramToken
+          TELEGRAM_SECRET: !Ref TelegramSecret
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:Scan]
+              Resource: !GetAtt SchoolsTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:Scan, dynamodb:DeleteItem, dynamodb:Query]
+              Resource: !GetAtt SubscribersTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query]
+              Resource: !GetAtt HistoryTable.Arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sns:CreateTopic
+                - sns:Subscribe
+              Resource: !Sub arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:school-air-alert-*
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ForecastApi
+            Path: /api/v1/{proxy+}
+            Method: ANY
+
+  DailyCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.daily_check.handler
+      Timeout: 60
+      Environment:
+        Variables:
+          TELEGRAM_TOKEN: !Ref TelegramToken
+          BEDROCK_MODEL: !Ref BedrockModel
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Scan]
+              Resource: !GetAtt SchoolsTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:GetItem, dynamodb:Query]
+              Resource: !GetAtt HistoryTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:Query]
+              Resource: !GetAtt SubscribersTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:DeleteItem]
+              Resource: !GetAtt NotificationRunsTable.Arn
+        # F8 creates school topics with this prefix. Limit publish permission
+        # to this application's topics instead of granting SNS access to '*'.
+        - Statement:
+            - Effect: Allow
+              Action: sns:Publish
+              Resource: !Sub arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:school-air-alert-*
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: !Ref BedrockModelArn
+      Events:
+        DailySchedule:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 6 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            FlexibleTimeWindow:
+              Mode: OFF
+            State: ENABLED
+        EveningSchedule:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 19 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            FlexibleTimeWindow:
+              Mode: OFF
+            State: ENABLED
+            Input: '{"forecast_target":"tomorrow","scheduled_time":"<aws.scheduler.scheduled-time>"}'
+
+  SchoolsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: school_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: school_id
+          KeyType: HASH
+
+  HistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: school_id
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: school_id
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+
+  SubscribersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: school_id
+          AttributeType: S
+        - AttributeName: contact
+          AttributeType: S
+      KeySchema:
+        - AttributeName: school_id
+          KeyType: HASH
+        - AttributeName: contact
+          KeyType: RANGE
+
+  NotificationRunsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: run_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: run_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+Outputs:
+  ApiBaseUrl:
+    Description: API Gateway default-stage URL.
+    Value: !Sub https://${ForecastApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}

@@ -21,6 +21,8 @@ htmlcov/
 
 *.log
 .DS_Store
+**/node_modules/
+**/dist/
 
 # Python virtual environments and caches
 backend/.venv/
