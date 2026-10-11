@@ -47,7 +47,7 @@ cd backend
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements-dev.txt
-USE_MEMORY_DB=true python -m uvicorn app.main:app --reload --port 8000
+USE_MEMORY_DB=true python -m uvicorn app.main:app --reload --port 8017
 ```
 
 In another terminal:
@@ -68,15 +68,16 @@ set:
 
 ```text
 VITE_DATA_MODE=live
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8017
 ```
 
 Vite variables are public browser configuration; do not put secrets in them.
 Live mode never silently falls back to demo data. The location form accepts
 latitude and longitude; Mumbai is only the displayed example/default.
-Set `VITE_TELEGRAM_BOT_USERNAME` to the public Telegram bot username to show its
-link on the dashboard. This is public configuration; never use the bot token
-there.
+The public Telegram link is configured with
+`VITE_TELEGRAM_BOT_USERNAME=schoolalert11_bot` to show it on the dashboard.
+This is public configuration; never use the bot token there. Seeing the link
+does not verify webhook configuration or message delivery.
 
 The backend accepts:
 
@@ -175,7 +176,7 @@ npm test -- --run
 npm run build
 ```
 
-The full backend suite passed locally with **94 passed** on 2026-10-10. In a
+The full backend suite passed locally with **94 passed** on 2026-10-11. In a
 restricted execution sandbox, synchronous Starlette `TestClient` requests may
 hang because the sandbox denies asyncio's Unix socketpair wakeup send with
 `EPERM`. This is an environment restriction; the same seven route tests and
@@ -211,15 +212,15 @@ approved parameters, and explicitly authorizing deployment should you run
   set `CORS_ORIGINS` to a comma-separated list of exact origins, restart the
   backend, and do not use `*`.
 - **Live mode says the forecast could not load:** in `frontend/.env`, check
-  `VITE_DATA_MODE=live` and `VITE_API_URL=http://localhost:8000` (or the
+  `VITE_DATA_MODE=live` and `VITE_API_URL=http://localhost:8017` (or the
   backend's selected port), then restart Vite. Check
-  `http://localhost:8000/api/v1/health` and the forecast URL below. Live mode
+  `http://localhost:8017/api/v1/health` and the forecast URL below. Live mode
   requires internet access to Open-Meteo; provider errors are shown instead of
   silently switching to demo data.
 - **Missing configuration:** compare local values with `frontend/.env.example`
   and `backend/.env.example`. Keep tokens and credentials only in local or
   deployment secret configuration; never copy them into Vite variables.
-- **Port is already in use:** inspect it with `ss -ltnp` or `lsof -i :8000`.
+- **Port is already in use:** inspect it with `ss -ltnp` or `lsof -i :8017`.
   Do not stop a process you do not recognize. You can start FastAPI on another
   port, for example `python -m uvicorn app.main:app --reload --port 8017`, and
   set `VITE_API_URL=http://localhost:8017` before restarting Vite.

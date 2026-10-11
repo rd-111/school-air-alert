@@ -57,11 +57,9 @@ dashboard. No such service or result schema is currently implemented.
 
 ## Backend test environment
 
-The local synchronous ASGI test hang is reproducible, but its cause is not
-identified. AnyIO and asyncio worker functions finish in worker threads, while
-the event loop does not process their result callback until timeout; the same
-behavior appears in both project virtual environments. Package metadata shows
-the installed FastAPI, Starlette, HTTPX, and AnyIO versions satisfy their
-declared dependency ranges. The seven route tests remain enabled; a verified
-non-hanging subset can be run with the command in `README.md`. Do not interpret
-that subset as a full-suite pass.
+The `TestClient` hang was traced to the restricted Codex execution sandbox:
+asyncio's Unix socketpair wakeup send raises `EPERM` there, leaving the portal
+event loop asleep. Outside that sandbox, the isolated health test, all seven
+previously affected route tests, and the complete backend suite passed (94
+tests) on 2026-10-11. This is not an application or dependency workaround; do
+not skip the route tests. A normal local terminal should run the full suite.

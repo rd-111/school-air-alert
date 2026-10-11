@@ -14,12 +14,12 @@ afterEach(() => {
 
 describe("TelegramLink", () => {
   it("shows a safe public bot link when a username is configured", () => {
-    vi.stubEnv("VITE_TELEGRAM_BOT_USERNAME", "school_alert_bot");
+    vi.stubEnv("VITE_TELEGRAM_BOT_USERNAME", "schoolalert11_bot");
     render(<TelegramLink labels={labels} />);
 
     expect(screen.getByRole("link", { name: labels.telegramBotLink })).toHaveAttribute(
       "href",
-      "https://t.me/school_alert_bot",
+      "https://t.me/schoolalert11_bot",
     );
   });
 
