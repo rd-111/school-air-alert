@@ -3,13 +3,22 @@
 These items are intentionally unavailable until their data sources and rules
 are agreed. The dashboard must not display placeholder accuracy or smoke claims.
 
-## F19 — Forecast accuracy meter
+## F19 — Forecast accuracy indicator
 
-The feature specification asks for yesterday's forecast compared with what
-occurred, summarized as matched statuses over the previous 10 days, and stored
-in History. It does not identify an authoritative observation source or define
-how school forecasts are matched to observations. Open-Meteo historical or
-archived forecast output is not actual observed ground truth.
+Implemented an honest dashboard status: “Forecast accuracy not yet measured —
+historical validation data is unavailable.” The dashboard also explains that
+the output is a model forecast, not a school-site measurement, and that a
+recent update does not establish accuracy. In live mode it displays provider,
+retrieval time, and the number of displayed forecast hours only when supplied
+by the current forecast response. This metadata is descriptive and is not a
+confidence or accuracy measure. Demo mode does not show live-provider metadata.
+
+Accuracy remains unmeasured. The feature specification asks for yesterday's
+forecast compared with what occurred, summarized as matched statuses over the
+previous 10 days, and stored in History. It does not identify an authoritative
+observation source or define how school forecasts are matched to observations.
+Open-Meteo historical or archived forecast output is not actual observed ground
+truth.
 
 Decisions needed:
 

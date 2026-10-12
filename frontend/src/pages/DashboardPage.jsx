@@ -98,6 +98,19 @@ export default function DashboardPage({ labels }) {
         <HourlyReadings hourly={data.hourly} labels={labels} />
       </section>
 
+      <section className="panel forecast-reliability" aria-labelledby="forecast-reliability-title">
+        <h2 id="forecast-reliability-title">{labels.forecastReliabilityTitle}</h2>
+        <p className="reliability-status">{labels.forecastAccuracyUnavailable}</p>
+        <p>{labels.forecastReliabilityNote}</p>
+        {data.mode === "live" && (
+          <dl className="reliability-details">
+            {data.source?.provider && <div><dt>{labels.forecastProvider}</dt><dd>{data.source.provider}</dd></div>}
+            {data.retrievedAt && <div><dt>{labels.retrievedAt}</dt><dd>{new Date(data.retrievedAt).toLocaleString()}</dd></div>}
+            {data.hourly?.length > 0 && <div><dt>{labels.forecastHorizon}</dt><dd>{data.hourly.length} {labels.forecastHours}</dd></div>}
+          </dl>
+        )}
+      </section>
+
       <ActivityWindows data={data} labels={labels} />
       <ActivityAdvice recommendations={data.activityGuidance} labels={labels} />
 

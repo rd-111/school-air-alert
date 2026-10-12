@@ -51,6 +51,24 @@ describe("dashboard states", () => {
     expect(await screen.findByRole("heading", { name: "GREEN" })).toBeInTheDocument();
     expect(screen.getByText("DEMO DATA · NOT LIVE")).toBeInTheDocument();
     expect(screen.getByText("11:00–12:00")).toBeInTheDocument();
+    expect(screen.getByText("Forecast accuracy not yet measured — historical validation data is unavailable.")).toBeInTheDocument();
+    expect(screen.queryByText("Provider", { exact: false })).not.toBeInTheDocument();
+  });
+
+  it("shows only supplied forecast metadata in the reliability panel", async () => {
+    loadDashboardData.mockResolvedValue({
+      schoolName: "School Air Alert", mode: "live", status: "UNKNOWN", averagePm25: null,
+      peakPm25: null, hourly: [{ time: "07:00", pm25: null, status: "UNKNOWN" }],
+      bestWindow: null, worstWindow: null, source: { provider: "Open-Meteo Air Quality API" },
+      retrievedAt: "2026-10-09T00:00:00Z",
+    });
+
+    renderApp();
+
+    const panel = await screen.findByRole("region", { name: "About this forecast" });
+    expect(panel).toHaveTextContent("Forecast accuracy not yet measured");
+    expect(panel).toHaveTextContent("Open-Meteo Air Quality API");
+    expect(panel).toHaveTextContent("1 hours");
   });
 
   it("shows a loading state while dashboard data is pending", () => {

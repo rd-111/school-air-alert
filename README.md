@@ -142,10 +142,14 @@ PE, sports, recess, assemblies, or bus waiting.
 
 ## F19–F21 status
 
-- **F19 accuracy meter: blocked, not implemented.** A forecast archive or
-  reanalysis product is not an approved authoritative observation source.
-  Select an observed dataset, station-matching method, and date-alignment rules
-  before comparing forecast status with what occurred.
+- **F19 forecast accuracy indicator: implemented; accuracy remains unmeasured.**
+  The dashboard says historical validation data is unavailable and explains
+  that a model forecast is not a school-site measurement. In live mode it also
+  shows the provider, retrieval timestamp, and displayed forecast-hour count
+  when supplied by the existing response. These details do not imply accuracy
+  or confidence. A forecast archive or reanalysis product is not an approved
+  authoritative observation source; select an observed dataset,
+  station-matching method, and date-alignment rules before validating results.
 - **F20 smoke-source hint: blocked, not implemented.** NASA FIRMS supplies
   satellite hotspot detections. The project has no agreed wind-direction
   provider, definition of “upwind,” hotspot cluster rule, or approved key
@@ -157,9 +161,9 @@ PE, sports, recess, assemblies, or bus waiting.
   row. EventBridge/DynamoDB/SNS/Telegram behavior still needs deployment-level
   verification.
 
-The outstanding F19/F20 data and policy decisions are listed in
+The remaining F19 accuracy-validation and F20 data and policy decisions are listed in
 [`docs/pending-decisions.md`](docs/pending-decisions.md). No accuracy score or
-smoke-contribution message is currently displayed.
+smoke-contribution message is displayed.
 
 Notification claims reduce duplicate retries. If an external publish succeeds
 but its response times out, the outcome is uncertain; live delivery semantics
