@@ -39,6 +39,15 @@ sample score is presented as real.
 
 ## F20 — NASA FIRMS smoke-source hint
 
+**Implementation status (2026-10-24):** the optional FIRMS and modeled-wind
+potential-transport hint is implemented locally. The full backend suite passed
+(143 passed), the F20 endpoint test passed individually, frontend tests passed
+(36), the production build and Ruff passed, and `git diff --check` passed.
+Live provider behavior and AWS deployment/notification delivery remain
+unverified. A prior intermittent synchronous TestClient/AnyIO hang was
+observed; its precise cause remains unknown. The original causal
+smoke-attribution statement remains unavailable.
+
 The optional service queries the NASA FIRMS Area API server-side for registered
 school coordinates. It requests a bounded 2-day VIIRS NOAA-21 NRT CSV area and
 filters to detections acquired within the preceding 24 hours and inside the
@@ -86,13 +95,13 @@ the key. The operational radius default is configurable through
 `FIRMS_SEARCH_RADIUS_KM` / `FirmsSearchRadiusKm`; this does not resolve plume
 relevance. Open-Meteo needs no API key. Its free API is restricted to
 non-commercial use, is rate limited, has no uptime guarantee, and requires
-CC BY attribution. The modeled provider is not live-verified in this project.
+CC BY attribution. The modeled provider is not live-verified in this project;
+local mocked tests do not establish live availability.
 
 ## Backend test environment
 
-The `TestClient` hang was traced to the restricted Codex execution sandbox:
-asyncio's Unix socketpair wakeup send raises `EPERM` there, leaving the portal
-event loop asleep. Outside that sandbox, the isolated health test, all seven
-previously affected route tests, and the complete backend suite passed (94
-tests) on 2026-10-11. This is not an application or dependency workaround; do
-not skip the route tests. A normal local terminal should run the full suite.
+An intermittent synchronous Starlette `TestClient`/AnyIO hang has been
+observed, but its precise cause remains unknown. The latest reported local run
+passed the complete backend suite (143 passed), including the F20 endpoint
+test individually. Do not skip route tests. If the hang recurs, capture the
+active test and traceback rather than assuming a cause.

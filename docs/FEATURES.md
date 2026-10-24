@@ -4,18 +4,17 @@ Read the root `AGENTS.md`, `docs/AGENTS.md`, and this file before a feature task
 
 ## 0. Product summary
 
-### Implementation status note (2026-10-23)
+### Implementation status note (2026-10-24)
 
 The repository has local implementations for the forecast, planner, daily
 alerts, SNS/email, history and school APIs, sensitive mode, Telegram bot,
 optional Bedrock messages, dashboard, monthly report, poster, and docs. F21's
 19:00 IST tomorrow-forecast path is implemented locally. F19 remains blocked
 until an authoritative observed-data source and date/station matching rules are
-approved. F20 has a partial optional FIRMS and modeled-wind implementation;
-the causal smoke-attribution claim remains blocked pending approval. AWS
-resources, real provider calls, and delivery
-remain unverified because nothing has been deployed. See README.md for setup,
-test results, and limitations.
+approved. F20's optional FIRMS and modeled-wind potential-transport hint is
+implemented locally; the original causal smoke-attribution claim remains
+blocked. Live provider behavior, AWS deployment, and notification delivery
+remain unverified. See README.md for setup, test results, and limitations.
 
 Every morning at 06:00 IST, the system forecasts PM2.5 for school hours (07:00–15:00), decides GREEN / YELLOW / RED, finds the best and worst hours for outdoor activity, and sends plain-language alerts to principals and parents by email and Telegram. A React website shows status, a 24-hour chart, a monthly report card, and a printable poster. Anyone can also check air quality for their location without signing up.
 
@@ -237,10 +236,10 @@ and [Air Quality API](https://open-meteo.com/en/docs/air-quality-api).
 Use NASA FIRMS hotspots from the last 24 hours upwind of the school. If an approved cluster exists, add: “Smoke from nearby fires is likely contributing.” If FIRMS is unavailable, keep the core forecast available and show an explicit unavailable state for the optional hint.
 - **Target areas:** isolated backend service/provider, configuration, and tests; integrate with alert messages only after verified.
 - **Configuration clarification:** the optional NASA FIRMS service and
-  backend-only key configuration are authorized for this partial
+  backend-only key configuration are authorized for this local
   implementation. The MAP_KEY is not a frontend setting or a committed value.
 
-**Current implementation note (2026-10-23):** the optional backend service
+**Current implementation note (2026-10-24):** the optional backend service
 queries NASA FIRMS for registered-school coordinates, filters NOAA-21 VIIRS
 NRT CSV to the trailing 24 hours and configured radius (default 25 km),
 deduplicates exact platform/time/location rows, and groups same-platform,
@@ -269,8 +268,16 @@ confirm exposure. Wind is model output, not an observation. Open-Meteo data
 availability varies by model and the newest archive records may be missing;
 the service returns an indeterminate state instead of substituting forecast
 values. Its free API is limited to non-commercial use and requires attribution.
-F20 remains partially implemented pending approval of model adequacy, plume
-and uncertainty policy, and evidence needed for any causal claim.
+
+The local F20 implementation and endpoint test are complete; the feature was
+committed and pushed as `54a0ef1`. The full backend suite passed locally
+(143 passed); the endpoint test also passed individually.
+Frontend tests passed (36), the production build passed, Ruff passed, and
+`git diff --check` passed. A prior intermittent synchronous TestClient/AnyIO
+hang was observed; its precise cause remains unknown. Live NASA FIRMS and
+Open-Meteo behavior, AWS deployment, and notification delivery are not
+verified. The original causal smoke-attribution sentence remains blocked
+pending approved evidence and methodology.
 
 ### F21. Evening “tomorrow” alert
 

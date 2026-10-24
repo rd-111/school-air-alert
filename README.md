@@ -206,13 +206,14 @@ PE, sports, recess, assemblies, or bus waiting.
   or confidence. A forecast archive or reanalysis product is not an approved
   authoritative observation source; select an observed dataset,
   station-matching method, and date-alignment rules before validating results.
-- **F20 smoke-source hint: partially implemented.** Optional nearby NOAA-21
+- **F20 smoke-source hint: implemented locally.** Optional nearby NOAA-21
   VIIRS NRT detections are grouped by reported pixel footprints and matched to
   Open-Meteo modeled historical wind at their location/time. The interim
   possible-transport wording is shown only when the modeled vector points
   toward the school. The original causal smoke-contribution message remains
   blocked; model adequacy, plume uncertainty, and observed attribution remain
-  unresolved. Neither provider's live availability is deployment-verified.
+  unresolved. NASA FIRMS and Open-Meteo live behavior, AWS deployment, and
+  notification delivery remain unverified.
 - **F21 evening alert: implemented locally, infrastructure unverified.** The
   19:00 IST event requests `forecast_days=2`, selects tomorrow in Asia/Kolkata,
   labels the message as tomorrow, and does not write another same-day History
@@ -239,11 +240,12 @@ npm test -- --run
 npm run build
 ```
 
-The full backend suite passed locally with **94 passed** on 2026-10-11. In a
-restricted execution sandbox, synchronous Starlette `TestClient` requests may
-hang because the sandbox denies asyncio's Unix socketpair wakeup send with
-`EPERM`. This is an environment restriction; the same seven route tests and
-the full suite passed when run outside that sandbox. Do not exclude those tests.
+The full backend suite passed locally with **143 passed**. The F20 endpoint test
+also passed individually. Frontend tests passed (**36 tests**), the production
+build passed, Ruff passed, and `git diff --check` passed. A prior intermittent
+synchronous Starlette `TestClient`/AnyIO hang was observed; its precise cause
+remains unknown. Do not exclude the affected tests. Live provider behavior and
+AWS deployment/delivery are not established by these local checks.
 
 Use Node.js 22.12 or newer. `npm ci` uses the committed
 `frontend/package-lock.json`. CI is configured for Python 3.12 and Node 22.12;
@@ -287,11 +289,10 @@ approved parameters, and explicitly authorizing deployment should you run
   Do not stop a process you do not recognize. You can start FastAPI on another
   port, for example `python -m uvicorn app.main:app --reload --port 8017`, and
   set `VITE_API_URL=http://localhost:8017` before restarting Vite.
-- **Backend tests appear to hang:** in a restricted execution sandbox, asyncio's
-  cross-thread socketpair wakeup can be denied with `EPERM`, leaving Starlette
-  `TestClient` waiting for a callback. The full suite passed when run outside
-  that sandbox: `python -m pytest -q` (94 passed). Run the command from the
-  backend directory in a normal local terminal rather than filtering tests.
+- **Backend tests appear to hang:** an intermittent synchronous Starlette
+  `TestClient`/AnyIO hang has been observed, but its precise cause is unknown.
+  The latest reported full local run passed (`python -m pytest -q`, 143 passed).
+  If it recurs, capture the active test and traceback; do not skip it.
 
 ## Teammate smoke-test guide
 
