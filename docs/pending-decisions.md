@@ -1,7 +1,8 @@
 # Pending product and verification decisions
 
-These items are intentionally unavailable until their data sources and rules
-are agreed. The dashboard must not display placeholder accuracy or smoke claims.
+The F19 accuracy result and F20 smoke-attribution claim remain unavailable
+until their data sources and rules are agreed. The dashboard must not display
+placeholder accuracy or unsupported smoke claims.
 
 ## F19 — Forecast accuracy indicator
 
@@ -38,31 +39,54 @@ sample score is presented as real.
 
 ## F20 — NASA FIRMS smoke-source hint
 
-The feature specification calls for hotspots in the previous 24 hours that are
-upwind of a school and permits a smoke-contribution sentence when a cluster is
-found. The repository has no wind-data provider or approved calculation for
-“upwind” or “cluster.” A FIRMS hotspot is a satellite detection; by itself it
-does not establish an active fire at the school or show that smoke caused its
-PM2.5 reading.
+The optional service queries the NASA FIRMS Area API server-side for registered
+school coordinates. It requests a bounded 2-day VIIRS NOAA-21 NRT CSV area and
+filters to detections acquired within the preceding 24 hours and inside the
+configured radius (default 25 km). NASA's `acq_date`/`acq_time` are normalized
+as UTC acquisition timestamps. Exact duplicate platform/time/location rows
+are removed. Pixel clusters use overlapping circumscribed disks based on
+NASA's scan and track pixel dimensions, and are limited to the same platform
+and acquisition minute. Clusters are not merged across satellites or passes.
+Explicit states distinguish missing providers, missing/stale wind samples,
+detections without a downwind vector, and possible modeled transport. Provider
+failures do not block the forecast.
 
-Decisions needed:
+For every cluster, Open-Meteo Historical Forecast supplies modeled 10 m wind
+at that cluster's coordinates and acquisition timestamp. Samples are matched
+by UTC timestamp; wind-from direction is converted into an east/north
+downwind vector, and components are interpolated only across adjacent hourly
+records. A positive dot product with the cluster-to-school displacement is
+the geometric “toward” test. This is a half-plane check, not a plume model; no
+minimum speed or directional tolerance is applied. Zero wind, missing values,
+records outside the available time range, or gaps larger than an hour are
+indeterminate. The UI then shows the interim wording only when at least one
+cluster passes this test.
 
-1. Approve the server-side NASA FIRMS integration and secret configuration for
-   its MAP_KEY. No key belongs in the frontend or source control.
-2. Select the wind provider, measurement height, observation/forecast time, and
-   handling for missing or stale wind data.
-3. Define the geographic search area, what counts as upwind, and the allowed
-   wind-direction uncertainty.
-4. Define a hotspot cluster (count, distance, acquisition time, sensor/source,
-   confidence, and any fire-radiative-power filters).
-5. Approve the evidence threshold and wording for any alert. The specified
-   “likely contributing” sentence must not appear from a hotspot alone.
+The radius remains a search boundary, not a plume or exposure model. FIRMS
+hotspots do not establish smoke at ground level, exposure at the school, or a
+cause for PM2.5. The specified “Smoke from nearby fires is likely
+contributing” sentence remains blocked.
 
-Proposed design after approval: a backend-only, optional FIRMS service with a
-bounded request, validated coordinates/area, normalized detection timestamps,
-source attribution, and explicit `unconfigured`, `unavailable`, `no_candidate`,
-or evidence-backed result states. Its failure must not block the forecast or
-dashboard. No such service or result schema is currently implemented.
+Decisions still needed:
+
+1. Confirm that the Open-Meteo model and its spatial resolution are adequate
+   for the intended school context; Best Match can vary by location and the
+   newest historical archive records may be unavailable.
+2. Approve whether the geometric half-plane check is suitable for the interim
+   potential-transport wording, and whether a plume-width or uncertainty model
+   is required. No undocumented speed or angle cutoffs are used.
+3. Define what evidence, such as independent observed smoke/air-quality data
+   and a validated attribution method, could support the original causal
+   “likely contributing” sentence. It is not emitted by this implementation.
+
+The credential approach is established: request a free NASA FIRMS MAP_KEY and
+configure `FIRMS_MAP_KEY` only in backend local secret configuration or the
+SAM `FirmsMapKey` `NoEcho` parameter. Never use a frontend variable or commit
+the key. The operational radius default is configurable through
+`FIRMS_SEARCH_RADIUS_KM` / `FirmsSearchRadiusKm`; this does not resolve plume
+relevance. Open-Meteo needs no API key. Its free API is restricted to
+non-commercial use, is rate limited, has no uptime guarantee, and requires
+CC BY attribution. The modeled provider is not live-verified in this project.
 
 ## Backend test environment
 

@@ -4,15 +4,16 @@ Read the root `AGENTS.md`, `docs/AGENTS.md`, and this file before a feature task
 
 ## 0. Product summary
 
-### Implementation status note (2026-10-10)
+### Implementation status note (2026-10-23)
 
 The repository has local implementations for the forecast, planner, daily
 alerts, SNS/email, history and school APIs, sensitive mode, Telegram bot,
 optional Bedrock messages, dashboard, monthly report, poster, and docs. F21's
 19:00 IST tomorrow-forecast path is implemented locally. F19 remains blocked
 until an authoritative observed-data source and date/station matching rules are
-approved. F20 remains blocked until its wind source, upwind area, and hotspot
-cluster rule are defined. AWS resources, real provider calls, and delivery
+approved. F20 has a partial optional FIRMS and modeled-wind implementation;
+the causal smoke-attribution claim remains blocked pending approval. AWS
+resources, real provider calls, and delivery
 remain unverified because nothing has been deployed. See README.md for setup,
 test results, and limitations.
 
@@ -233,20 +234,43 @@ and [Air Quality API](https://open-meteo.com/en/docs/air-quality-api).
 
 ### F20. Smoke-source hint
 
-Use NASA FIRMS hotspots from the last 24 hours upwind of the school. If a cluster exists, add: “Smoke from nearby fires is likely contributing.” Fall back silently when FIRMS is unavailable.
+Use NASA FIRMS hotspots from the last 24 hours upwind of the school. If an approved cluster exists, add: “Smoke from nearby fires is likely contributing.” If FIRMS is unavailable, keep the core forecast available and show an explicit unavailable state for the optional hint.
 - **Target areas:** isolated backend service/provider, configuration, and tests; integrate with alert messages only after verified.
-- **Clarification for later:** the fixed architecture currently names Open-Meteo and Geocoding as air-data sources, while F20 adds NASA FIRMS and a map key. Confirm this additional external provider and credential/configuration approach before implementation; do not add a service or key without approval.
+- **Configuration clarification:** the optional NASA FIRMS service and
+  backend-only key configuration are authorized for this partial
+  implementation. The MAP_KEY is not a frontend setting or a committed value.
 
-**Current implementation note (2026-10-09):** not implemented. NASA FIRMS
-provides satellite hotspot detections, but the project has no configured wind
-direction source or approved upwind distance, acquisition-time rule, confidence
-filter, or cluster definition. A hotspot is not evidence that a fire is active
-at a school or that it caused unsafe air. These decisions and key configuration
-need approval before displaying the specified smoke sentence. NASA's [Area API
-documentation](https://firms.modaps.eosdis.nasa.gov/api/area) requires a free
-MAP_KEY, a source, a bounding area, and day range; it returns satellite hotspot
-attributes including coordinates and acquisition date/time. This is not a
-ready-made upwind smoke attribution.
+**Current implementation note (2026-10-23):** the optional backend service
+queries NASA FIRMS for registered-school coordinates, filters NOAA-21 VIIRS
+NRT CSV to the trailing 24 hours and configured radius (default 25 km),
+deduplicates exact platform/time/location rows, and groups same-platform,
+same-acquisition-minute pixels whose scan/track footprint disks overlap.
+Clusters are not merged across platforms or acquisition minutes. A cluster is
+one connected pixel group, not an independently verified fire. NASA documents
+the VIIRS acquisition time as UTC and scan/track as actual pixel dimensions
+([field definitions](https://modaps.modaps.eosdis.nasa.gov/services/about/products/viirs-land-c2-nrt/vnp14imgtdl_nrt.html)).
+
+For each cluster, the backend makes one batched query to the Open-Meteo
+Historical Forecast API for modeled 10 m wind at the cluster coordinate and
+acquisition time. Meteorological wind-from direction is converted to a
+downwind east/north vector, and hourly vectors are interpolated before
+comparison with the cluster-to-school displacement. A positive projection is
+labelled as possible modeled transport; this geometric half-plane check is not
+a plume model. Missing, invalid, unbracketed, or non-hourly wind is
+indeterminate. NASA FIRMS or Open-Meteo failure does not block the air-quality
+forecast. The UI shows the exact interim wording only for a positive modeled
+transport result. Both sources and the wind retrieval time are labelled.
+The batched wind result uses the existing short configurable in-process cache.
+
+The original “Smoke from nearby fires is likely contributing” causal statement
+remains blocked: these data do not establish smoke at ground level, exposure
+at a school, or a contribution to PM2.5. The interim wording also does not
+confirm exposure. Wind is model output, not an observation. Open-Meteo data
+availability varies by model and the newest archive records may be missing;
+the service returns an indeterminate state instead of substituting forecast
+values. Its free API is limited to non-commercial use and requires attribution.
+F20 remains partially implemented pending approval of model adequacy, plume
+and uncertainty policy, and evidence needed for any causal claim.
 
 ### F21. Evening “tomorrow” alert
 

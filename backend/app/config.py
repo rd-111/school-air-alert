@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     telegram_token: str = ""
     telegram_secret: str = ""
     bedrock_model: str = ""
+    firms_map_key: str = ""
+    firms_search_radius_km: float = Field(default=25, gt=0, le=100)
+    firms_cache_ttl_seconds: int = Field(default=300, ge=0, le=3600)
 
     @model_validator(mode="after")
     def validate_classification_thresholds(self) -> "Settings":

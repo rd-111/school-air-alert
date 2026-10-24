@@ -89,6 +89,7 @@ POST /api/v1/schools
 POST /api/v1/subscribe
 GET /api/v1/status?school_id=...
 GET /api/v1/history?school_id=...&days=30
+GET /api/v1/schools/<school_id>/smoke-hint
 ```
 
 The forecast response identifies `data_type: forecast`, reports the retrieval
@@ -102,6 +103,61 @@ Amplify website origins. For local job/repository development, set
 does not send notifications. Provider requests have a ten-second timeout, one
 retry, and a short in-process per-location/day-count cache. Old or incomplete
 forecasts are marked UNKNOWN; live mode does not silently substitute mock data.
+The backend reads settings from its process environment; it does not load a
+`backend/.env` file automatically.
+
+The optional F20 satellite context uses a registered school's saved
+coordinates. The backend queries NASA FIRMS for a bounded area, filters NOAA-21
+VIIRS NRT rows to the last 24 hours and configured radius, removes exact
+duplicate pixels, and groups overlapping scan/track footprints within the same
+platform and acquisition minute. The radius defaults to 25 km
+(`FIRMS_SEARCH_RADIUS_KM`, maximum 100 km); it is a search boundary, not a
+plume radius. The browser never receives the FIRMS key. Request a free key
+from [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/map_key/) and set
+`FIRMS_MAP_KEY` only in the backend environment. Without it, the hint reports
+that it is unconfigured and the forecast continues normally.
+
+For detected clusters, the backend optionally requests modeled 10 m wind at
+each cluster's location and acquisition time through the [Open-Meteo
+Historical Forecast API](https://open-meteo.com/en/docs/historical-forecast-api).
+Wind direction is treated as the direction it comes from; vector components
+are interpolated between adjacent hourly records. Missing or incomplete wind
+produces an indeterminate hint. A modeled vector pointing toward the school
+can show this interim wording: “Nearby fire detections may indicate a
+potential smoke transport risk. Satellite detections and modeled wind do not
+confirm smoke exposure at this school.” This is not a plume or exposure model.
+The modeled wind response is cached briefly using the backend's existing
+`FIRMS_CACHE_TTL_SECONDS` setting.
+The original “Smoke from nearby fires is likely contributing” causal message
+is not shown. NASA FIRMS hotspots are satellite indicators, not ground-level
+measurements or confirmation of smoke at school.
+
+Open-Meteo's free service is for non-commercial use, is rate limited, has no
+uptime guarantee, and requires CC BY attribution. Both services are optional;
+live access and data availability have not been verified as part of deployment.
+
+For a local check, open a backend terminal, enter the key without echoing it,
+and start the API:
+
+```sh
+cd backend
+read -rsp "NASA FIRMS MAP_KEY: " FIRMS_MAP_KEY
+printf '\n'
+export FIRMS_MAP_KEY FIRMS_SEARCH_RADIUS_KM=25 USE_MEMORY_DB=true
+.venv/bin/python -m uvicorn app.main:app --reload --port 8017
+```
+
+Then request the in-memory demo school's hint from another terminal:
+
+```sh
+curl -s http://localhost:8017/api/v1/schools/demo-school/smoke-hint
+```
+
+In the frontend terminal use live mode (`VITE_DATA_MODE=live` and
+`VITE_API_URL=http://localhost:8017`) and open the selected demo school's
+dashboard. The demo school has illustrative coordinates; for a real school,
+register its actual location first. Without a MAP_KEY the API returns
+`unconfigured`; do not use the example placeholder as a real key.
 
 School SNS topics are created with names beginning
 `school-air-alert-<school-id>-` so the SAM policy limits publishing and topic
@@ -150,18 +206,21 @@ PE, sports, recess, assemblies, or bus waiting.
   or confidence. A forecast archive or reanalysis product is not an approved
   authoritative observation source; select an observed dataset,
   station-matching method, and date-alignment rules before validating results.
-- **F20 smoke-source hint: blocked, not implemented.** NASA FIRMS supplies
-  satellite hotspot detections. The project has no agreed wind-direction
-  provider, definition of “upwind,” hotspot cluster rule, or approved key
-  configuration. A detection alone cannot establish an active fire at a school
-  or attribute local air quality to smoke.
+- **F20 smoke-source hint: partially implemented.** Optional nearby NOAA-21
+  VIIRS NRT detections are grouped by reported pixel footprints and matched to
+  Open-Meteo modeled historical wind at their location/time. The interim
+  possible-transport wording is shown only when the modeled vector points
+  toward the school. The original causal smoke-contribution message remains
+  blocked; model adequacy, plume uncertainty, and observed attribution remain
+  unresolved. Neither provider's live availability is deployment-verified.
 - **F21 evening alert: implemented locally, infrastructure unverified.** The
   19:00 IST event requests `forecast_days=2`, selects tomorrow in Asia/Kolkata,
   labels the message as tomorrow, and does not write another same-day History
   row. EventBridge/DynamoDB/SNS/Telegram behavior still needs deployment-level
   verification.
 
-The remaining F19 accuracy-validation and F20 data and policy decisions are listed in
+The remaining F19 accuracy-validation and F20 model-adequacy, plume, and
+attribution decisions are listed in
 [`docs/pending-decisions.md`](docs/pending-decisions.md). No accuracy score or
 smoke-contribution message is displayed.
 
@@ -263,5 +322,7 @@ or parent information in demos.
 - API caching is process-local, so separate Lambda instances do not share it.
 - AWS deployment and production CORS origins have not been verified.
 - DynamoDB/SNS integration tests use mocks; no AWS account was accessed.
-- F19 accuracy comparison and F20 smoke-source hint are not implemented pending
-  authoritative data and safety-policy decisions.
+- F19 accuracy comparison remains unavailable pending authoritative
+  observations. F20 combines optional nearby satellite detections with modeled
+  wind and pixel grouping, but cannot establish plume transport or smoke
+  exposure. Its original causal attribution claim remains pending.

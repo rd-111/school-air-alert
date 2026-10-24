@@ -272,6 +272,29 @@ button:disabled { cursor: wait; opacity: 0.65; }
 .activity-advice h2 { margin: 0 0 0.4rem; font-size: 1.2rem; }
 .activity-advice p { color: var(--muted); }
 .activity-advice li { margin: 0.55rem 0; line-height: 1.55; }
+.smoke-hint { margin-top: 1rem; padding: 1.2rem; }
+.smoke-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.smoke-heading h2 { margin: 0; font-size: clamp(1.15rem, 3vw, 1.4rem); }
+.smoke-icon { display: grid; flex: none; width: 2.8rem; height: 2.8rem; place-items: center; border-radius: 14px; background: #eef3f7; font-size: 1.35rem; }
+.smoke-intro { color: var(--muted); }
+.smoke-state { border-left: 4px solid #617886; border-radius: 0 10px 10px 0; padding: 0.7rem 0.85rem; background: #f4f7f9; line-height: 1.55; }
+.smoke-relevant_detections { border-left-color: #bd7b28; background: #fff8e8; }
+.smoke-transport_possible { border-left-color: #bd7b28; background: #fff8e8; }
+.smoke-wind_indeterminate, .smoke-wind_unavailable { border-left-color: #a76537; background: #fff7f1; }
+.smoke-no_detections { border-left-color: #617886; }
+.smoke-stale, .smoke-unconfigured, .smoke-unavailable, .smoke-error { border-left-color: #a76537; background: #fff7f1; }
+.smoke-metadata { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0.75rem 1rem; margin: 1rem 0; }
+.smoke-metadata div { min-width: 0; }
+.smoke-metadata dt { color: var(--muted); font-size: 0.9rem; }
+.smoke-metadata dd { margin: 0.15rem 0 0; overflow-wrap: anywhere; }
+.smoke-metadata a { color: var(--green-dark); font-weight: 700; }
+.smoke-hint h3 { font-size: 1rem; }
+.smoke-detections { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.smoke-detections li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem; background: #fcfdfc; }
+.smoke-model-note { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.smoke-clusters { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.smoke-clusters li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem; background: #fcfdfc; }
+.smoke-disclaimer { margin: 1rem 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.55; }
 .disclaimer { padding: 1.1rem 0.2rem 0; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
 
 .state-page { min-height: calc(100vh - 70px); display: grid; place-items: center; }

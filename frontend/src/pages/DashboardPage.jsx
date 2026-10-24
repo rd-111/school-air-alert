@@ -8,6 +8,7 @@ import HourlyReadings from "../components/HourlyReadings.jsx";
 import SchoolForms from "../components/SchoolForms.jsx";
 import TelegramLink from "../components/TelegramLink.jsx";
 import ActivityAdvice from "../components/ActivityAdvice.jsx";
+import SmokeHint from "../components/SmokeHint.jsx";
 
 export default function DashboardPage({ labels }) {
   const [data, setData] = useState(null);
@@ -15,6 +16,7 @@ export default function DashboardPage({ labels }) {
   const [attempt, setAttempt] = useState(0);
   const [location, setLocation] = useState({ latitude: 19.076, longitude: 72.8777 });
   const [locationError, setLocationError] = useState(false);
+  const [selectedSchoolId, setSelectedSchoolId] = useState("");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -41,6 +43,18 @@ export default function DashboardPage({ labels }) {
     setLocation(nextLocation);
     setAttempt((value) => value + 1);
   }
+
+  const handleSchoolChange = useCallback((schoolId) => {
+    setSelectedSchoolId(schoolId);
+  }, []);
+
+  const updateFromSchool = useCallback((school) => {
+    setLocation((current) => (
+      current.latitude === school.latitude && current.longitude === school.longitude
+        ? current
+        : { latitude: school.latitude, longitude: school.longitude }
+    ));
+  }, []);
 
   if (state === "loading") {
     return <StatePanel title={labels.loadingTitle} message={labels.loadingMessage} />;
@@ -78,8 +92,13 @@ export default function DashboardPage({ labels }) {
         </span>
       </header>
 
-      <LocationForm location={location} onChange={updateLocation} labels={labels} />
-      <SchoolForms labels={labels} />
+      <LocationForm
+        key={`${location.latitude},${location.longitude}`}
+        location={location}
+        onChange={updateLocation}
+        labels={labels}
+      />
+      <SchoolForms labels={labels} onSchoolChange={handleSchoolChange} />
       <TelegramLink labels={labels} />
       {locationError && <p className="form-error" role="alert">{labels.invalidLocation}</p>}
       <p className="location-note">{labels.locationNote} {data.location?.latitude ?? location.latitude}{labels.coordinateSeparator} {data.location?.longitude ?? location.longitude}</p>
@@ -113,6 +132,12 @@ export default function DashboardPage({ labels }) {
 
       <ActivityWindows data={data} labels={labels} />
       <ActivityAdvice recommendations={data.activityGuidance} labels={labels} />
+      <SmokeHint
+        schoolId={selectedSchoolId}
+        dataMode={data.mode}
+        onSchoolLocation={updateFromSchool}
+        labels={labels}
+      />
 
       {data.source && <p className="source-note">{labels.dataSource}: {data.source.attribution} <a href={data.source.provider_url} target="_blank" rel="noreferrer">{labels.providerOpenMeteo}</a> · <a href={data.source.model_url} target="_blank" rel="noreferrer">{labels.providerCams}</a> · {labels.sourceLicense}: {data.source.license} · {labels.retrievedAt}: {new Date(data.retrievedAt).toLocaleString()}</p>}
       {data.stale && <p className="form-error" role="alert">{labels.staleDataNotice}</p>}

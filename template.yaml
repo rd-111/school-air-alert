@@ -11,6 +11,17 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Telegram webhook secret; provide at deployment time.
+  FirmsMapKey:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: Optional NASA FIRMS MAP_KEY; configure through secure deployment input.
+  FirmsSearchRadiusKm:
+    Type: Number
+    Default: 25
+    MinValue: 0.1
+    MaxValue: 100
+    Description: Candidate search radius only; this does not estimate smoke transport.
   BedrockModel:
     Type: String
     Default: ''
@@ -60,6 +71,8 @@ Resources:
         Variables:
           TELEGRAM_TOKEN: !Ref TelegramToken
           TELEGRAM_SECRET: !Ref TelegramSecret
+          FIRMS_MAP_KEY: !Ref FirmsMapKey
+          FIRMS_SEARCH_RADIUS_KM: !Ref FirmsSearchRadiusKm
       Policies:
         - Statement:
             - Effect: Allow

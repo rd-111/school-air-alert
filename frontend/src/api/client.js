@@ -126,6 +126,60 @@ export async function loadSchools(labels) {
   return requestApi("/api/v1/schools");
 }
 
+export async function loadSchoolSmokeHint(schoolId) {
+  if (!schoolId) throw new Error("A school must be selected");
+  const response = await requestApi(
+    `/api/v1/schools/${encodeURIComponent(schoolId)}/smoke-hint`,
+  );
+  return normalizeSmokeHint(response);
+}
+
+export function normalizeSmokeHint(body) {
+  const statuses = [
+    "unconfigured", "unavailable", "no_detections", "stale", "relevant_detections",
+    "wind_unavailable", "wind_indeterminate", "no_upwind_clusters", "transport_possible",
+  ];
+  if (!body || !statuses.includes(body.status) || !body.school || !body.source
+    || typeof body.school.school_id !== "string" || typeof body.school.name !== "string"
+    || !Number.isFinite(body.school.latitude) || body.school.latitude < -90 || body.school.latitude > 90
+    || !Number.isFinite(body.school.longitude) || body.school.longitude < -180 || body.school.longitude > 180
+    || !Number.isFinite(body.search_radius_km) || body.search_radius_km <= 0 || body.search_radius_km > 100
+    || !Array.isArray(body.detections)
+    || typeof body.source.provider !== "string" || typeof body.source.dataset !== "string"
+    || typeof body.source.url !== "string"
+    || (body.retrieved_at !== null && !Number.isFinite(Date.parse(body.retrieved_at)))
+    || (body.latest_observation_at !== null
+      && !Number.isFinite(Date.parse(body.latest_observation_at)))) {
+    throw new Error("The backend returned an invalid satellite hint");
+  }
+  const detectionIsInvalid = body.detections.some((detection) => (
+    !detection || !Number.isFinite(Date.parse(detection.observed_at))
+    || !Number.isFinite(detection.latitude) || detection.latitude < -90 || detection.latitude > 90
+    || !Number.isFinite(detection.longitude) || detection.longitude < -180 || detection.longitude > 180
+    || !Number.isFinite(detection.distance_km) || detection.distance_km < 0
+  ));
+  if (detectionIsInvalid) throw new Error("The backend returned invalid detection data");
+  if (["relevant_detections", "transport_possible", "no_upwind_clusters", "wind_indeterminate", "wind_unavailable"].includes(body.status)
+    && body.detections.length === 0) {
+    throw new Error("The backend returned an invalid satellite hint");
+  }
+  if (body.clusters !== undefined && (!Array.isArray(body.clusters) || body.clusters.some((cluster) => (
+    !cluster || typeof cluster.cluster_id !== "string"
+    || !Number.isFinite(Date.parse(cluster.observed_at))
+    || !Number.isFinite(cluster.latitude) || cluster.latitude < -90 || cluster.latitude > 90
+    || !Number.isFinite(cluster.longitude) || cluster.longitude < -180 || cluster.longitude > 180
+    || !Number.isInteger(cluster.pixel_count) || cluster.pixel_count < 1
+    || !["indeterminate", "transport_toward", "not_toward"].includes(cluster.wind_status)
+  )))) throw new Error("The backend returned invalid cluster data");
+  if (body.wind_source !== null && body.wind_source !== undefined
+    && (!body.wind_source.provider || !body.wind_source.dataset || !body.wind_source.url
+      || (body.wind_source.retrieved_at !== null && body.wind_source.retrieved_at !== undefined
+        && !Number.isFinite(Date.parse(body.wind_source.retrieved_at))))) {
+    throw new Error("The backend returned invalid modeled-wind provenance");
+  }
+  return body;
+}
+
 export async function registerSchool(school) {
   if (DATA_MODE === "demo") {
     const school_id = `demo-school-${demoSchools.length}`;

@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
 import { loadSchools, registerSchool, subscribeToSchool } from "../api/client.js";
 
-export default function SchoolForms({ labels }) {
+export default function SchoolForms({ labels, onSchoolChange }) {
   const [schools, setSchools] = useState([]);
   const [schoolId, setSchoolId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function refreshSchools() {
+  async function refreshSchools(preferredId = schoolId) {
     try {
       const result = await loadSchools(labels);
       setSchools(result);
-      setSchoolId((current) => result.some((school) => school.school_id === current)
-        ? current
-        : result[0]?.school_id || "");
+      const selected = result.find((school) => school.school_id === preferredId)?.school_id
+        || result[0]?.school_id || "";
+      setSchoolId(selected);
+      onSchoolChange?.(selected);
       setError(false);
     } catch {
       setError(true);
@@ -23,7 +24,7 @@ export default function SchoolForms({ labels }) {
 
   useEffect(() => {
     refreshSchools();
-  }, [labels]);
+  }, [labels, onSchoolChange]);
 
   async function create(event) {
     event.preventDefault();
@@ -37,9 +38,8 @@ export default function SchoolForms({ labels }) {
         longitude: Number(form.get("longitude")),
         language: String(form.get("language")),
       });
-      setSchoolId(result.school_id);
       setMessage(result.status === "demo_only" ? labels.demoActionNotice : labels.schoolCreated);
-      await refreshSchools();
+      await refreshSchools(result.school_id);
     } catch {
       setMessage(labels.formError);
     } finally {
@@ -73,7 +73,14 @@ export default function SchoolForms({ labels }) {
       <h2 id="school-tools-title">{labels.schoolToolsTitle}</h2>
       <label className="school-picker">
         {labels.schoolPicker}
-        <select value={schoolId} onChange={(event) => setSchoolId(event.target.value)} disabled={!schools.length}>
+        <select
+          value={schoolId}
+          onChange={(event) => {
+            setSchoolId(event.target.value);
+            onSchoolChange?.(event.target.value);
+          }}
+          disabled={!schools.length}
+        >
           {!schools.length && <option value="">{labels.noSchools}</option>}
           {schools.map((school) => <option key={school.school_id} value={school.school_id}>{school.name}</option>)}
         </select>

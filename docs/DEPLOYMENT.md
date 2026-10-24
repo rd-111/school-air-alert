@@ -16,13 +16,25 @@ these steps require a machine with AWS access.
   tables, and two EventBridge schedules. API requests, Lambda execution,
   DynamoDB requests/storage, Scheduler, SNS, and optional Bedrock use may incur
   charges. Check current pricing and budgets before deployment.
-- The template currently takes Telegram credentials as `NoEcho` parameters;
-  it does not read them from Secrets Manager. Deploy without Telegram only if
+- The template takes Telegram credentials as `NoEcho` parameters and includes
+  an optional `FirmsMapKey` `NoEcho` parameter, passed only to the API Lambda.
+  Request a free NASA FIRMS MAP_KEY and provide it through secure deployment
+  input only if using the optional nearby-detection context. `FirmsSearchRadiusKm`
+  controls the search boundary and does not estimate smoke transport. Never put
+  the key in a Vite variable or Git. The template does not read secrets from
+  Secrets Manager. Deploy without Telegram only if
   the template's required parameter handling is deliberately adapted and
   reviewed. Never put bot tokens in frontend variables, source files, command
   history, or Git.
-- F19 and F20 are not implemented. F21 is implemented locally, but scheduled
-  delivery is not verified in AWS.
+- F19 remains unavailable. F20 optionally combines nearby FIRMS satellite
+  detections with Open-Meteo modeled historical 10 m wind and reports possible
+  transport only when the modeled vector points toward the school. It does not
+  confirm smoke or exposure; the original causal message remains blocked.
+  Configure only the backend-side `FIRMS_MAP_KEY`; Open-Meteo needs no key.
+  The free Open-Meteo endpoint is non-commercial, rate-limited, has no uptime
+  guarantee, and requires CC BY attribution. Neither live-provider access nor
+  F20 production operation has been verified. F21 is implemented locally, but
+  scheduled delivery is not verified in AWS.
 
 ## Backend (SAM)
 

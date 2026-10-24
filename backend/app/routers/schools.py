@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.config import Settings
 from app.deps import get_repositories, get_settings
@@ -18,7 +18,9 @@ from app.schemas.schools import (
     SubscribeRequest,
     SubscribeResponse,
 )
+from app.schemas.smoke import SmokeHintResponse
 from app.services.air import AirProviderError, AirProviderTimeout
+from app.services.firms import get_smoke_hint
 from app.services.forecast import build_forecast
 from app.services.schools import (
     SchoolNotFound,
@@ -31,6 +33,35 @@ from app.services.schools import (
 
 router = APIRouter(tags=["schools"])
 Repositories = dict
+
+
+@router.get(
+    "/schools/{school_id}/smoke-hint",
+    response_model=SmokeHintResponse,
+    responses={404: {"model": ErrorResponse}},
+)
+def school_smoke_hint(
+    school_id: Annotated[str, Path(min_length=1, max_length=128)],
+    repositories: Annotated[Repositories, Depends(get_repositories)],
+    settings: Annotated[Settings, Depends(get_settings)],
+):
+    """Report nearby FIRMS detections for a school's registered coordinates."""
+    school = repositories["schools"].get(school_id)
+    if school is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "SCHOOL_NOT_FOUND", "message": "School was not found."},
+        )
+    try:
+        return get_smoke_hint(school, settings)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "SCHOOL_LOCATION_INVALID",
+                "message": "School location is not configured correctly.",
+            },
+        ) from exc
 
 
 @router.get("/schools", response_model=list[SchoolSummary])

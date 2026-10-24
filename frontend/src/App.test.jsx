@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App.jsx";
 import {
   loadDashboardData,
+  loadSchoolSmokeHint,
   loadSchoolHistory,
   loadSchoolStatus,
   loadSchools,
@@ -11,6 +12,7 @@ import {
 
 vi.mock("./api/client.js", () => ({
   loadDashboardData: vi.fn(),
+  loadSchoolSmokeHint: vi.fn(),
   loadSchools: vi.fn(),
   registerSchool: vi.fn(),
   subscribeToSchool: vi.fn(),
@@ -33,6 +35,15 @@ describe("dashboard states", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     loadSchools.mockResolvedValue([{ school_id: "demo-school", name: "Demo School" }]);
+    loadSchoolSmokeHint.mockResolvedValue({
+      status: "unconfigured",
+      school: { school_id: "demo-school", name: "Demo School", latitude: 19.076, longitude: 72.8777 },
+      retrieved_at: null,
+      latest_observation_at: null,
+      search_radius_km: 25,
+      detections: [],
+      source: { provider: "NASA FIRMS", dataset: "VIIRS NOAA-21 Near Real-Time", url: "https://firms.modaps.eosdis.nasa.gov/api/area/" },
+    });
   });
 
   it("shows demo status and outdoor windows", async () => {

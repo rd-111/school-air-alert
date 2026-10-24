@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { normalizeForecast } from "./client.js";
+import { normalizeForecast, normalizeSmokeHint } from "./client.js";
 
 const fixture = {
   data_type: "forecast",
@@ -56,5 +56,45 @@ describe("forecast response validation", () => {
     }));
     const { loadDashboardData } = await import("./client.js");
     await expect(loadDashboardData()).rejects.toThrow("provider unavailable");
+  });
+});
+
+describe("NASA FIRMS hint response validation", () => {
+  const response = {
+    status: "relevant_detections",
+    school: { school_id: "s1", name: "School", latitude: 19, longitude: 72 },
+    retrieved_at: "2026-10-23T12:00:00Z",
+    latest_observation_at: "2026-10-23T11:00:00Z",
+    search_radius_km: 25,
+    detections: [{
+      observed_at: "2026-10-23T11:00:00Z", latitude: 19.01, longitude: 72.01,
+      distance_km: 1.4, satellite: "N21", confidence: "n",
+    }],
+    source: { provider: "NASA FIRMS", dataset: "VIIRS NOAA-21 NRT", url: "https://firms.modaps.eosdis.nasa.gov/" },
+  };
+
+  it("accepts a normalized provider response", () => {
+    expect(normalizeSmokeHint(response)).toEqual(response);
+  });
+
+  it("rejects malformed or fabricated-shape responses", () => {
+    expect(() => normalizeSmokeHint({ ...response, status: "smoke_confirmed" })).toThrow("invalid satellite hint");
+    expect(() => normalizeSmokeHint({ ...response, detections: [{ ...response.detections[0], distance_km: "near" }] }))
+      .toThrow("invalid detection data");
+  });
+
+  it("loads smoke hints through the configured backend path", async () => {
+    vi.resetModules();
+    vi.stubEnv("VITE_API_URL", "http://api.example.test");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => response,
+    }));
+    const { loadSchoolSmokeHint } = await import("./client.js");
+    await expect(loadSchoolSmokeHint("school one")).resolves.toEqual(response);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.example.test/api/v1/schools/school%20one/smoke-hint",
+      expect.objectContaining({ headers: { Accept: "application/json" } }),
+    );
   });
 });

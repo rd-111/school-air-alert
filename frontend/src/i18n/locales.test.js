@@ -26,4 +26,17 @@ describe("locale dictionaries", () => {
       }
     }
   });
+
+  it("translate every smoke-hint state and safety note", () => {
+    for (const locale of [en, hi, mr]) {
+      for (const key of [
+        "smokeTitle", "smokeLoading", "smokeUnconfigured", "smokeUnavailable",
+        "smokeNoDetections", "smokeStale", "smokeRelevant", "smokeDisclaimer",
+        "smokeWindUnavailable", "smokeWindIndeterminate", "smokeNoUpwindClusters",
+        "smokeTransportPossible", "smokeClusterList", "smokeWindFrom",
+      ]) {
+        expect(locale[key].length).toBeGreaterThan(0);
+      }
+    }
+  });
 });
