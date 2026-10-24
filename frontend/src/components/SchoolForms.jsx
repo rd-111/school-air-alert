@@ -1,22 +1,32 @@
 import { useEffect, useState } from "react";
 import { loadSchools, registerSchool, subscribeToSchool } from "../api/client.js";
 
-export default function SchoolForms({ labels, onSchoolChange }) {
+export default function SchoolForms({ labels, selectedSchoolId, selectedSchool, onSchoolChange }) {
   const [schools, setSchools] = useState([]);
-  const [schoolId, setSchoolId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function refreshSchools(preferredId = schoolId) {
+  async function refreshSchools(preferredId = selectedSchoolId) {
     try {
       const result = await loadSchools(labels);
-      setSchools(result);
-      const selected = result.find((school) => school.school_id === preferredId)?.school_id
-        || result[0]?.school_id || "";
-      setSchoolId(selected);
-      onSchoolChange?.(selected);
-      setError(false);
+      const match = result.find((school) => school.school_id === preferredId);
+      if (match) {
+        setSchools(result);
+        onSchoolChange?.(match);
+        setError(false);
+      } else if (!preferredId) {
+        setSchools(result);
+        onSchoolChange?.(result[0] || null);
+        setError(false);
+      } else if (selectedSchool?.school_id === preferredId) {
+        // Keep the restored school selected during partial or stale list responses.
+        setSchools([selectedSchool, ...result.filter((school) => school.school_id !== preferredId)]);
+        setError(true);
+      } else {
+        setSchools(result);
+        setError(true);
+      }
     } catch {
       setError(true);
     }
@@ -55,7 +65,7 @@ export default function SchoolForms({ labels, onSchoolChange }) {
     setMessage("");
     try {
       const result = await subscribeToSchool({
-        school_id: schoolId,
+        school_id: selectedSchoolId,
         email: String(form.get("email")).trim(),
         sensitive: form.get("sensitive") === "on",
       });
@@ -74,10 +84,10 @@ export default function SchoolForms({ labels, onSchoolChange }) {
       <label className="school-picker">
         {labels.schoolPicker}
         <select
-          value={schoolId}
+          value={selectedSchoolId || ""}
           onChange={(event) => {
-            setSchoolId(event.target.value);
-            onSchoolChange?.(event.target.value);
+            const selected = schools.find((school) => school.school_id === event.target.value);
+            if (selected) onSchoolChange?.(selected);
           }}
           disabled={!schools.length}
         >
@@ -85,11 +95,17 @@ export default function SchoolForms({ labels, onSchoolChange }) {
           {schools.map((school) => <option key={school.school_id} value={school.school_id}>{school.name}</option>)}
         </select>
       </label>
+      {selectedSchool && (
+        <div className="school-selected" aria-live="polite">
+          <strong>{selectedSchool.name}</strong>
+          <span>{selectedSchool.latitude}, {selectedSchool.longitude}</span>
+        </div>
+      )}
       {error && <p className="form-error" role="alert">{labels.formError}</p>}
 
-      <details>
+      <details className="school-form-panel register-school-details">
         <summary>{labels.registerSchool}</summary>
-        <form className="school-form" onSubmit={create}>
+        <form className="school-form" aria-label={labels.registerSchool} onSubmit={create}>
           <label>{labels.schoolName}<input name="name" minLength="3" maxLength="80" required /></label>
           <label>{labels.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" required /></label>
           <label>{labels.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" required /></label>
@@ -104,12 +120,12 @@ export default function SchoolForms({ labels, onSchoolChange }) {
         </form>
       </details>
 
-      <details>
+      <details className="school-form-panel subscription-details">
         <summary>{labels.subscribeEmail}</summary>
-        <form className="school-form" onSubmit={subscribe}>
+        <form className="school-form" aria-label={labels.subscribeEmail} onSubmit={subscribe}>
           <label>{labels.emailAddress}<input name="email" type="email" maxLength="254" required /></label>
           <label className="checkbox-label"><input name="sensitive" type="checkbox" />{labels.sensitiveOptIn}</label>
-          <button disabled={busy || !schoolId}>{labels.subscribeButton}</button>
+          <button disabled={busy || !selectedSchoolId}>{labels.subscribeButton}</button>
         </form>
       </details>
       {message && <p className="form-message" role="status">{message}</p>}

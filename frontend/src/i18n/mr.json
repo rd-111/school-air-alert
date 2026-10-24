@@ -117,15 +117,22 @@
   "formError": "विनंती पूर्ण झाली नाही. तपशील तपासून पुन्हा प्रयत्न करा.",
   "reportEyebrow": "अंदाजाचा इतिहास",
   "reportTitle": "मासिक रिपोर्ट कार्ड",
+  "reportPeriod": "मागील {count} दिवस",
   "backToDashboard": "डॅशबोर्डवर परत जा",
   "forecastHistoryNote": "मोजणी जतन केलेल्या अंदाजांची आहे, मोजलेल्या संपर्काची नाही.",
   "noHistory": "अजून जतन केलेला अंदाज इतिहास उपलब्ध नाही.",
   "protectedHoursLabel": "अंदाजे संरक्षित बाहेरील तास",
   "hoursUnit": "तास",
   "protectedHoursCalculation": "अंदाज: पिवळे आणि लाल अंदाजाचे दिवस × प्रत्येक शाळेच्या दिवशी 2 बाहेरील तास.",
+  "reportStatusDistribution": "जतन केलेल्या अंदाजाची स्थिती",
+  "daysRecorded": "{count} जतन केलेले दिवस",
+  "historySectionEyebrow": "दिवसानुसार",
+  "dailyForecasts": "दैनिक अंदाजाचा सारांश",
   "posterNeedsSchool": "आधी शाळा निवडा",
   "posterQueryHelp": "पोस्टर school_id क्वेरी पॅरामीटरसह उघडा.",
   "printPoster": "पोस्टर छापा",
+  "posterForecastSummary": "अंदाजाचा सारांश",
+  "posterSource": "अंदाजाचा स्रोत",
   "liveDisclaimer": "फक्त अंदाजाची माहिती, वैद्यकीय सल्ला नाही. अंदाज सुरक्षिततेची हमी देत नाहीत.",
   "posterAdvice": {
     "green": ["नेहमीच्या बाहेरील कृती ठीक आहेत.", "योजना करताना अंदाजातील चांगली वेळ निवडा.", "योजना बदलण्यापूर्वी परिस्थिती तपासा."],
@@ -133,6 +140,10 @@
     "red": ["पीटी आणि सभा घरात घ्या.", "खिडक्या बंद ठेवा.", "बाहेरील कृती टाळा."],
     "unknown": ["अंदाजातील रीडिंग अपूर्ण आहेत.", "कृतीपूर्वी स्थानिक परिस्थिती तपासा.", "UNKNOWN ला GREEN समजू नका."]
   },
+  "themeSwitchToDark": "डार्क मोड सुरू करा",
+  "themeSwitchToLight": "लाइट मोड सुरू करा",
+  "themeDark": "डार्क मोड",
+  "themeLight": "लाइट मोड",
   "telegramBotLink": "School Air Alert Telegram बॉट उघडा",
   "telegramBotUnavailable": "बॉटचे वापरकर्तानाव सेट केल्यावर Telegram लिंक दिसेल."
 }

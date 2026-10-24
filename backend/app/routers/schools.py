@@ -13,7 +13,7 @@ from app.schemas.schools import (
     HistoryResponse,
     SchoolCreate,
     SchoolCreated,
-    SchoolSummary,
+    SchoolOption,
     StatusResponse,
     SubscribeRequest,
     SubscribeResponse,
@@ -64,12 +64,17 @@ def school_smoke_hint(
         ) from exc
 
 
-@router.get("/schools", response_model=list[SchoolSummary])
+@router.get("/schools", response_model=list[SchoolOption])
 def list_schools(
     repositories: Annotated[Repositories, Depends(get_repositories)],
 ):
     return [
-        {"school_id": school["school_id"], "name": school["name"]}
+        {
+            "school_id": school["school_id"],
+            "name": school["name"],
+            "latitude": school["lat"],
+            "longitude": school["lon"],
+        }
         for school in repositories["schools"].list_all()
     ]
 

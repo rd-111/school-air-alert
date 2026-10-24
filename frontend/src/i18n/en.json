@@ -117,15 +117,22 @@
   "formError": "The request could not be completed. Check the details and try again.",
   "reportEyebrow": "FORECAST HISTORY",
   "reportTitle": "Monthly report card",
+  "reportPeriod": "Past {count} days",
   "backToDashboard": "Back to dashboard",
   "forecastHistoryNote": "Counts describe saved forecasts, not measured exposure.",
   "noHistory": "No saved forecast history is available yet.",
   "protectedHoursLabel": "Estimated outdoor hours protected",
   "hoursUnit": "hours",
   "protectedHoursCalculation": "Estimate: yellow and red forecast days × 2 outdoor hours per school day.",
+  "reportStatusDistribution": "Saved forecast status",
+  "daysRecorded": "{count} saved days",
+  "historySectionEyebrow": "DAY BY DAY",
+  "dailyForecasts": "Daily forecast summaries",
   "posterNeedsSchool": "Choose a school first",
   "posterQueryHelp": "Open the poster with a school_id query parameter.",
   "printPoster": "Print poster",
+  "posterForecastSummary": "Forecast summary",
+  "posterSource": "Forecast source",
   "liveDisclaimer": "Forecast information only, not medical advice. Forecasts do not guarantee safety.",
   "posterAdvice": {
     "green": ["Normal outdoor activities are fine.", "Use the best forecast window when planning.", "Review conditions before changing plans."],
@@ -133,6 +140,10 @@
     "red": ["Move PE and assembly indoors.", "Keep windows closed.", "Avoid outdoor activity."],
     "unknown": ["Forecast readings are incomplete.", "Check local conditions before activities.", "Do not treat UNKNOWN as GREEN."]
   },
+  "themeSwitchToDark": "Switch to dark mode",
+  "themeSwitchToLight": "Switch to light mode",
+  "themeDark": "Dark mode",
+  "themeLight": "Light mode",
   "telegramBotLink": "Open the School Air Alert Telegram bot",
   "telegramBotUnavailable": "Telegram bot link will appear after the bot username is configured."
 }

@@ -30,6 +30,13 @@ class SchoolSummary(BaseModel):
     name: str
 
 
+class SchoolOption(SchoolSummary):
+    """School picker record, including its saved forecast coordinates."""
+
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
 class SchoolCreated(SchoolSummary):
     status: Literal["created"] = "created"
 

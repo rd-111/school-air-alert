@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f8f5" />
     <meta name="description" content="A school air-quality forecast dashboard with clear status, hourly outlooks, and activity planning support." />
+    <script>
+      try {
+        const savedTheme = localStorage.getItem("school-air-alert-theme");
+        document.documentElement.dataset.theme = savedTheme === "light" || savedTheme === "dark"
+          ? savedTheme
+          : (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
     <title>School Air Alert</title>
   </head>
   <body>

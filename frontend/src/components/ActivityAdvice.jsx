@@ -5,6 +5,7 @@ const activityLabelKeys = {
   assembly: "assembly",
   bus_wait: "busWait",
 };
+const activityIcons = { pe: "◉", sports: "◇", recess: "✳", assembly: "▤", bus_wait: "↗" };
 
 export default function ActivityAdvice({ recommendations = [], labels }) {
   if (!recommendations.length) return null;
@@ -14,9 +15,10 @@ export default function ActivityAdvice({ recommendations = [], labels }) {
       <p>{labels.activityGuidanceDisclaimer}</p>
       <ul>
         {recommendations.map(({ activity, guidance_code: code }) => (
-          <li key={activity}>
-            <strong>{labels.activityNames[activityLabelKeys[activity]]}: </strong>
-            {labels.activityGuidance[code.toLowerCase()]}
+          <li className="activity-note" key={activity}>
+            <span className="activity-note-icon" aria-hidden="true">{activityIcons[activity] || "•"}</span>
+            <strong>{labels.activityNames[activityLabelKeys[activity]]}</strong>
+            <span>{labels.activityGuidance[code.toLowerCase()]}</span>
           </li>
         ))}
       </ul>

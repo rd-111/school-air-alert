@@ -3,7 +3,7 @@ import { mockDashboardData } from "./mockData.js";
 export const DATA_MODE = import.meta.env.VITE_DATA_MODE === "live" ? "live" : "demo";
 const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 12000;
-const demoSchools = [{ school_id: "demo-school", name: "Demo School" }];
+const demoSchools = [{ school_id: "demo-school", name: "Demo School", latitude: 19.076, longitude: 72.8777 }];
 
 async function requestApi(path, { method = "GET", body } = {}) {
   if (!API_URL) throw new Error("VITE_API_URL is required in live mode");
@@ -123,7 +123,15 @@ export async function loadSchools(labels) {
       name: school.school_id === "demo-school" ? labels?.demoSchoolName || school.name : school.name,
     }));
   }
-  return requestApi("/api/v1/schools");
+  const schools = await requestApi("/api/v1/schools");
+  if (!Array.isArray(schools) || schools.some((school) => (
+    !school || typeof school.school_id !== "string" || typeof school.name !== "string"
+    || !Number.isFinite(school.latitude) || school.latitude < -90 || school.latitude > 90
+    || !Number.isFinite(school.longitude) || school.longitude < -180 || school.longitude > 180
+  ))) {
+    throw new Error("The backend returned invalid school locations");
+  }
+  return schools;
 }
 
 export async function loadSchoolSmokeHint(schoolId) {
@@ -183,7 +191,7 @@ export function normalizeSmokeHint(body) {
 export async function registerSchool(school) {
   if (DATA_MODE === "demo") {
     const school_id = `demo-school-${demoSchools.length}`;
-    demoSchools.push({ school_id, name: school.name });
+    demoSchools.push({ school_id, name: school.name, latitude: school.latitude, longitude: school.longitude });
     return { school_id, name: school.name, status: "demo_only" };
   }
   return requestApi("/api/v1/schools", { method: "POST", body: school });

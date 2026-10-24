@@ -117,15 +117,22 @@
   "formError": "अनुरोध पूरा नहीं हुआ। विवरण जाँचें और फिर कोशिश करें।",
   "reportEyebrow": "पूर्वानुमान इतिहास",
   "reportTitle": "मासिक रिपोर्ट कार्ड",
+  "reportPeriod": "पिछले {count} दिन",
   "backToDashboard": "डैशबोर्ड पर लौटें",
   "forecastHistoryNote": "गणना सहेजे गए पूर्वानुमानों की है, मापे गए संपर्क की नहीं।",
   "noHistory": "अभी कोई सहेजा हुआ पूर्वानुमान इतिहास उपलब्ध नहीं है।",
   "protectedHoursLabel": "अनुमानित सुरक्षित बाहरी घंटे",
   "hoursUnit": "घंटे",
   "protectedHoursCalculation": "अनुमान: पीले और लाल पूर्वानुमान वाले दिन × प्रति स्कूल दिन 2 बाहरी घंटे।",
+  "reportStatusDistribution": "सहेजे गए पूर्वानुमान की स्थिति",
+  "daysRecorded": "{count} सहेजे गए दिन",
+  "historySectionEyebrow": "दिन के अनुसार",
+  "dailyForecasts": "दैनिक पूर्वानुमान सारांश",
   "posterNeedsSchool": "पहले स्कूल चुनें",
   "posterQueryHelp": "पोस्टर को school_id क्वेरी पैरामीटर के साथ खोलें।",
   "printPoster": "पोस्टर प्रिंट करें",
+  "posterForecastSummary": "पूर्वानुमान सारांश",
+  "posterSource": "पूर्वानुमान स्रोत",
   "liveDisclaimer": "केवल पूर्वानुमान जानकारी, चिकित्सा सलाह नहीं। पूर्वानुमान सुरक्षा की गारंटी नहीं देते।",
   "posterAdvice": {
     "green": ["सामान्य बाहरी गतिविधियाँ ठीक हैं।", "योजना बनाते समय पूर्वानुमान का बेहतर समय चुनें।", "योजना बदलने से पहले परिस्थितियाँ देखें।"],
@@ -133,6 +140,10 @@
     "red": ["पीटी और सभा अंदर करें।", "खिड़कियाँ बंद रखें।", "बाहरी गतिविधियों से बचें।"],
     "unknown": ["पूर्वानुमान रीडिंग अधूरी हैं।", "गतिविधि से पहले स्थानीय परिस्थितियाँ जाँचें।", "UNKNOWN को GREEN न मानें।"]
   },
+  "themeSwitchToDark": "डार्क मोड चालू करें",
+  "themeSwitchToLight": "लाइट मोड चालू करें",
+  "themeDark": "डार्क मोड",
+  "themeLight": "लाइट मोड",
   "telegramBotLink": "School Air Alert Telegram बॉट खोलें",
   "telegramBotUnavailable": "बॉट का उपयोगकर्ता नाम सेट होने के बाद Telegram लिंक दिखाई देगा।"
 }

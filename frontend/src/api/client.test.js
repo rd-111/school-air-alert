@@ -59,6 +59,38 @@ describe("forecast response validation", () => {
   });
 });
 
+describe("registered school locations", () => {
+  it("loads each live school's ID and saved coordinates from the backend", async () => {
+    vi.resetModules();
+    vi.stubEnv("VITE_DATA_MODE", "live");
+    vi.stubEnv("VITE_API_URL", "http://api.example.test");
+    const schools = [{
+      school_id: "pune-school", name: "Demo School Pune", latitude: 18.5204, longitude: 73.8567,
+    }];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => schools }));
+    const { loadSchools } = await import("./client.js");
+
+    await expect(loadSchools()).resolves.toEqual(schools);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.example.test/api/v1/schools",
+      expect.objectContaining({ headers: { Accept: "application/json" } }),
+    );
+  });
+
+  it("rejects school entries without valid coordinates", async () => {
+    vi.resetModules();
+    vi.stubEnv("VITE_DATA_MODE", "live");
+    vi.stubEnv("VITE_API_URL", "http://api.example.test");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ school_id: "pune-school", name: "Demo School Pune" }],
+    }));
+    const { loadSchools } = await import("./client.js");
+
+    await expect(loadSchools()).rejects.toThrow("invalid school locations");
+  });
+});
+
 describe("NASA FIRMS hint response validation", () => {
   const response = {
     status: "relevant_detections",

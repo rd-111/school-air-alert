@@ -37,6 +37,27 @@ def test_school_registration_memory_mode_avoids_sns_and_is_listable():
     assert any(row["school_id"] == created["school_id"] for row in repositories.schools.list_all())
 
 
+def test_school_list_returns_registered_coordinates_for_frontend_selection():
+    from app.routers.schools import list_schools
+
+    repositories = MemoryRepositories.with_demo_school()
+    register_school(
+        repositories.schools,
+        {
+            "name": "Demo School Pune",
+            "latitude": 18.5204,
+            "longitude": 73.8567,
+            "language": "Marathi",
+        },
+        Settings(use_memory_db=True),
+    )
+
+    schools = list_schools(repositories={"schools": repositories.schools})
+    pune = next(school for school in schools if school["name"] == "Demo School Pune")
+    assert pune["latitude"] == 18.5204
+    assert pune["longitude"] == 73.8567
+
+
 def test_live_school_registration_saves_both_topics_from_injected_creator():
     repositories = MemoryRepositories()
     created_topics = []

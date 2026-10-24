@@ -2,7 +2,7 @@ const icons = { GREEN: "✅", YELLOW: "⚠️", RED: "🏠", UNKNOWN: "ℹ️" }
 
 export default function HourlyReadings({ hourly, labels }) {
   return (
-    <div className="hourly-list" aria-label={labels.hourlyReadings}>
+    <div className="hourly-list" role="group" aria-label={labels.hourlyReadings}>
       {hourly.map((item) => (
         <article className={`hour-reading status-${safeStatus(item.status).toLowerCase()}`} key={item.time}>
           <strong>{item.time}</strong>

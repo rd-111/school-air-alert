@@ -43,7 +43,7 @@ export default function SmokeHint({ schoolId, dataMode, onSchoolLocation, labels
       {state === "loading" && <p role="status">{labels.smokeLoading}</p>}
       {state === "demo" && <p className="smoke-state" role="status">{labels.smokeDemo}</p>}
       {state === "no_school" && <p className="smoke-state" role="status">{labels.smokeSelectSchool}</p>}
-      {state === "error" && <p className="smoke-state smoke-unavailable" role="status">{labels.smokeError}</p>}
+      {state === "error" && <p className="smoke-state smoke-unavailable" role="alert">{labels.smokeError}</p>}
       {hint && <SmokeHintDetails hint={hint} labels={labels} state={state} />}
 
       <p className="smoke-disclaimer">{labels.smokeDisclaimer}</p>
