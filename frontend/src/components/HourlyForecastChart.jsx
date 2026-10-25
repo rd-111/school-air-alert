@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatPm25WithUnit } from "../utils/formatPm25.js";
 
 export default function HourlyForecastChart({ hourly, bestWindow, labels }) {
   if (!hourly?.length) {
@@ -22,14 +23,14 @@ export default function HourlyForecastChart({ hourly, bestWindow, labels }) {
           {bestWindow && (
             <ReferenceArea x1={bestWindow.start} x2={bestWindow.end} fill="var(--chart-highlight)" fillOpacity={0.22} />
           )}
-          <XAxis dataKey="time" tick={{ fill: "var(--muted)", fontSize: 12 }} tickLine={false} axisLine={false} minTickGap={28} interval="preserveStartEnd" />
+          <XAxis dataKey="time" tick={{ fill: "var(--muted)", fontSize: 12 }} tickLine={false} axisLine={false} minTickGap={48} interval="preserveStartEnd" />
           <YAxis tick={{ fill: "var(--muted)", fontSize: 12 }} tickLine={false} axisLine={false} width={48} />
           <Tooltip
             cursor={{ stroke: "var(--chart-grid)" }}
             contentStyle={{ backgroundColor: "var(--chart-tooltip)", borderColor: "var(--chart-tooltip-border)", borderRadius: 12, color: "var(--ink)", boxShadow: "var(--shadow-hover)", fontSize: 14 }}
             labelStyle={{ color: "var(--ink)" }}
             itemStyle={{ color: "var(--ink)" }}
-            formatter={(value) => [`${value} ${labels.pm25Unit}`, labels.pm25Short]}
+            formatter={(value) => [formatPm25WithUnit(value, labels.pm25Unit, labels.noReading), labels.pm25Short]}
           />
           <Line
             type="monotone"

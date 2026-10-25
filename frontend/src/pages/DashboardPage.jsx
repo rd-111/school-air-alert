@@ -79,6 +79,10 @@ export default function DashboardPage({ labels }) {
     ));
   }, []);
 
+  const forecastLocationDiffersFromSchool = selectedSchool && (
+    location.latitude !== selectedSchool.latitude || location.longitude !== selectedSchool.longitude
+  );
+
   return (
     <main className="dashboard" aria-busy={state === "loading"}>
       <header className="page-header">
@@ -121,7 +125,17 @@ export default function DashboardPage({ labels }) {
 
       {state === "ready" && data && <>
         <TelegramLink labels={labels} />
-        <p className="location-note">{labels.locationNote} {data.location?.latitude ?? location.latitude}{labels.coordinateSeparator} {data.location?.longitude ?? location.longitude}</p>
+        <p className="location-note">
+          {selectedSchool ? labels.schoolCoordinatesNote : labels.forecastLocationNote} {selectedSchool
+            ? `${selectedSchool.latitude}${labels.coordinateSeparator} ${selectedSchool.longitude}`
+            : `${location.latitude}${labels.coordinateSeparator} ${location.longitude}`}
+          {forecastLocationDiffersFromSchool && (
+            <>
+              <br />
+              <span>{labels.forecastRequestNote} {location.latitude}{labels.coordinateSeparator} {location.longitude}</span>
+            </>
+          )}
+        </p>
         <StatusCard data={data} labels={labels} />
 
         <section className="panel chart-panel" aria-labelledby="forecast-title">

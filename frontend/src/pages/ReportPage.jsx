@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { loadSchoolHistory, loadSchools } from "../api/client.js";
+import { formatPm25WithUnit } from "../utils/formatPm25.js";
 
 export default function ReportPage({ labels }) {
   const [searchParams] = useSearchParams();
@@ -105,8 +106,8 @@ export default function ReportPage({ labels }) {
                 <li className={`report-day status-${day.status.toLowerCase()}`} key={day.date}>
                   <time dateTime={day.date}>{day.date}</time>
                   <span className="report-day-status">{labels.status[day.status.toLowerCase()] || labels.status.unknown}</span>
-                  <span>{labels.averagePm25}: <strong>{formatPm25(day.average_pm25, labels.pm25Unit)}</strong></span>
-                  <span>{labels.peakPm25}: <strong>{formatPm25(day.peak_pm25, labels.pm25Unit)}</strong></span>
+                  <span>{labels.averagePm25}: <strong>{formatPm25WithUnit(day.average_pm25, labels.pm25Unit)}</strong></span>
+                  <span>{labels.peakPm25}: <strong>{formatPm25WithUnit(day.peak_pm25, labels.pm25Unit)}</strong></span>
                 </li>
               ))}
             </ol>
@@ -122,10 +123,6 @@ export default function ReportPage({ labels }) {
       )}
     </main>
   );
-}
-
-function formatPm25(value, unit) {
-  return Number.isFinite(value) ? `${value} ${unit}` : "—";
 }
 
 function PageState({ title, message, role }) {

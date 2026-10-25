@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { loadSchoolStatus } from "../api/client.js";
+import { formatPm25WithUnit } from "../utils/formatPm25.js";
 
 export default function PosterPage({ labels }) {
   const [searchParams] = useSearchParams();
@@ -42,8 +43,8 @@ export default function PosterPage({ labels }) {
         </header>
         <div className="poster-status"><span aria-hidden="true">{status.status === "GREEN" ? "✓" : status.status === "YELLOW" ? "!" : status.status === "RED" ? "⌂" : "i"}</span><strong>{labels.status[level]}</strong></div>
         <section className="poster-summary" aria-label={labels.posterForecastSummary}>
-          <div><span>{labels.averagePm25}</span><strong>{formatPm25(status.average_pm25, labels.pm25Unit)}</strong></div>
-          <div><span>{labels.peakPm25}</span><strong>{formatPm25(status.peak_pm25, labels.pm25Unit)}</strong></div>
+          <div><span>{labels.averagePm25}</span><strong>{formatPm25WithUnit(status.average_pm25, labels.pm25Unit)}</strong></div>
+          <div><span>{labels.peakPm25}</span><strong>{formatPm25WithUnit(status.peak_pm25, labels.pm25Unit)}</strong></div>
         </section>
         <section className="poster-advice-section">
           <h2>{labels.activityAdvice}</h2>
@@ -67,10 +68,6 @@ export default function PosterPage({ labels }) {
 
 function formatTime(value) {
   return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date(value));
-}
-
-function formatPm25(value, unit) {
-  return Number.isFinite(value) ? `${value} ${unit}` : "—";
 }
 
 function formatDateTime(value) {

@@ -153,21 +153,42 @@ describe("dashboard states", () => {
     expect(screen.queryByText("Provider", { exact: false })).not.toBeInTheDocument();
   });
 
+  it("formats forecast PM2.5 values to one decimal and handles missing readings", async () => {
+    loadDashboardData.mockResolvedValue({
+      schoolName: "Demo School", mode: "demo", status: "UNKNOWN",
+      averagePm25: 61.537499999999994, peakPm25: null,
+      hourly: [
+        { time: "07:00", pm25: 5.299999999999999, status: "GREEN" },
+        { time: "08:00", pm25: Number.POSITIVE_INFINITY, status: "UNKNOWN" },
+      ],
+      bestWindow: null, worstWindow: null,
+    });
+    renderApp();
+
+    expect(await screen.findByText("61.5")).toBeInTheDocument();
+    expect(screen.getByText("Peak: No reading")).toBeInTheDocument();
+    expect(screen.getByText("5.3 µg/m³")).toBeInTheDocument();
+    expect(screen.getByText("No reading")).toBeInTheDocument();
+    expect(screen.queryByText(/61\.537499/)).not.toBeInTheDocument();
+  });
+
   it("loads the selected school's forecast and smoke hint using its registered location", async () => {
     loadSchools.mockResolvedValue([
       { school_id: "demo-school", name: "Demo School", latitude: 19.076, longitude: 72.8777 },
-      { school_id: "pune-school", name: "Demo School Pune", latitude: 18.5204, longitude: 73.8567 },
+      { school_id: "pune-school", name: "Demo School Pune", latitude: 18.559, longitude: 73.7868 },
     ]);
     loadDashboardData.mockImplementation(async (location) => ({
       schoolName: "Forecast location",
       mode: "live",
-      status: location.latitude === 18.5204 ? "YELLOW" : "GREEN",
+      status: location.latitude === 18.559 ? "YELLOW" : "GREEN",
       averagePm25: 70,
       peakPm25: 90,
       hourly: [{ time: "11:00", pm25: 70, status: "YELLOW" }],
       bestWindow: null,
       worstWindow: null,
-      location,
+      location: location.latitude === 18.559
+        ? { latitude: 18.599998, longitude: 73.8 }
+        : location,
     }));
 
     const app = renderApp();
@@ -178,22 +199,24 @@ describe("dashboard states", () => {
 
     expect(await screen.findByText("Demo School Pune", { selector: ".school-name" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "YELLOW" })).toBeInTheDocument();
-    expect(screen.getByText(/18\.5204.*73\.8567/, { selector: ".location-note" })).toBeInTheDocument();
+    expect(screen.getByText(/Selected school coordinates: 18\.559, 73\.7868/)).toBeInTheDocument();
+    expect(screen.queryByText(/18\.599998/)).not.toBeInTheDocument();
     expect(loadDashboardData).toHaveBeenLastCalledWith(
-      { latitude: 18.5204, longitude: 73.8567 },
+      { latitude: 18.559, longitude: 73.7868 },
       expect.any(Object),
     );
     await waitFor(() => expect(loadSchoolSmokeHint).toHaveBeenCalledWith("pune-school"));
     expect(screen.getByLabelText("Choose a school")).toHaveValue("pune-school");
     expect(JSON.parse(window.localStorage.getItem("school-air-alert-selected-school"))).toMatchObject({
-      school_id: "pune-school", latitude: 18.5204, longitude: 73.8567,
+      school_id: "pune-school", latitude: 18.559, longitude: 73.7868,
     });
 
     app.unmount();
     renderApp();
     expect(await screen.findByLabelText("Choose a school")).toHaveValue("pune-school");
+    expect(await screen.findByText(/Selected school coordinates: 18\.559, 73\.7868/)).toBeInTheDocument();
     await waitFor(() => expect(loadDashboardData).toHaveBeenLastCalledWith(
-      { latitude: 18.5204, longitude: 73.8567 },
+      { latitude: 18.559, longitude: 73.7868 },
       expect.any(Object),
     ));
     expect(await screen.findByText("Demo School Pune", { selector: ".school-name" })).toBeInTheDocument();
@@ -255,6 +278,14 @@ describe("dashboard states", () => {
       { latitude: 18.5204, longitude: 73.8567 },
       expect.any(Object),
     );
+  });
+
+  it("uses a clear default-location label when no school is selected", async () => {
+    loadSchools.mockResolvedValue([]);
+    mockThemeDashboard();
+    renderApp();
+
+    expect(await screen.findByText(/Forecast coordinates \(Mumbai example when unchanged\): 19\.076, 72\.8777/)).toBeInTheDocument();
   });
 
   it("keeps both school forms and the location editor available when both disclosures are open", async () => {
@@ -379,7 +410,7 @@ describe("dashboard states", () => {
     expect(await screen.findByText("2 saved days")).toBeInTheDocument();
     expect(screen.getByText("2026-10-08")).toBeInTheDocument();
     expect(screen.getByText("2026-10-09")).toBeInTheDocument();
-    expect(screen.getByText("24 µg/m³")).toBeInTheDocument();
+    expect(screen.getByText("24.0 µg/m³")).toBeInTheDocument();
     expect(screen.getAllByText("—")).toHaveLength(2);
     expect(screen.getByText("Saved forecast status")).toBeInTheDocument();
   });
@@ -403,8 +434,8 @@ describe("dashboard states", () => {
     expect(await screen.findByRole("heading", { name: "Demo School" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Print poster" })).toBeInTheDocument();
     expect(screen.getByRole("list").children).toHaveLength(3);
-    expect(screen.getByText("32 µg/m³")).toBeInTheDocument();
-    expect(screen.getByText("45 µg/m³")).toBeInTheDocument();
+    expect(screen.getByText("32.0 µg/m³")).toBeInTheDocument();
+    expect(screen.getByText("45.0 µg/m³")).toBeInTheDocument();
     expect(screen.getByText("Forecast source: Illustrative source")).toBeInTheDocument();
   });
 });
