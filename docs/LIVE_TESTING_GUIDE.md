@@ -66,6 +66,37 @@ MAP_KEY for live requests. Open-Meteo Air Quality and Historical Forecast APIs
 need no API key; public service terms/rate limits apply. Check the provider
 terms before use.
 
+## Manual UI checklist
+
+These are manual procedures, not automated test results. No item below is
+marked as passed by this guide; record the date, browser, mode, and outcome when
+you run one. Use fictional school data. For items that say “live backend”, use
+the startup steps above with `VITE_DATA_MODE=live`; for UI-only checks, demo
+mode is sufficient.
+
+| Check | Steps and expected result | Live service or credentials? |
+|---|---|---|
+| Initial dashboard load | Open `/`. Confirm the dashboard identifies Demo or Live mode, shows the selected school, and presents loading, data, empty, or error state honestly. No mock reading should be labelled live. | Demo: no. Live: backend and internet/Open-Meteo. |
+| School selection | In live backend mode, open the school selector, choose another registered school, and confirm its name/location and data update. | Local memory API: no AWS; forecast needs internet. |
+| School registration | Use the dashboard's school registration form with a fictional name and valid coordinates. Confirm validation, success result, and that the new school appears and can be selected. | Local memory API: no external credentials. Persistence requires deployed DynamoDB/SNS configuration. |
+| Coordinate changes | Edit the selected school's latitude/longitude and request/refresh its forecast. Confirm the displayed coordinates and forecast request correspond to the edited location; out-of-range coordinates should show validation feedback. | Live forecast needs backend and internet; demo can exercise UI only. |
+| Forecast refresh | Refresh the page or reload forecast. Confirm source, retrieval time, and stale/error state reflect the response; model output is not called a sensor reading. | Live backend and internet/Open-Meteo. |
+| Hourly chart | Inspect the full hourly range, readable tick labels, units, and a point tooltip. Hover/focus points where supported; confirm labels correspond to the selected school's forecast. | Demo: no. Live: backend/provider. |
+| Activity advice/windows | Review best/worst windows and general activity guidance. Confirm unavailable/incomplete forecast does not become GREEN and no unimplemented activity-specific rule is implied. | Demo: no. Live values need backend/provider. |
+| Language switching | Choose English, Hindi, and Marathi; navigate among `/`, `/report`, and `/poster`; reload after choosing a language. Confirm translated labels stay selected and readable. | No external service. |
+| Theme persistence | Toggle Light/Dark, navigate routes, and reload. Confirm the theme persists; with the saved theme key cleared, the browser system preference is used. | No external service. |
+| Monthly report | Open `/report`; select a school if available. Confirm history counts/rows or an explicit empty/error state, and that the content is described as forecast history rather than measured exposure. | Demo/local memory may be empty; saved deployed history requires DynamoDB and scheduled processing. |
+| Notice poster | Open `/poster?school_id=demo-school` in demo mode or use the selected live school's ID. Confirm school/date/status/source and disclaimer are appropriate. | Demo: no. Live: backend/provider. |
+| Print preview | From the poster, choose Print. Confirm the poster fits a page and navigation, buttons, and unrelated dashboard content are excluded. Cancel the dialog after inspection if not printing. | Browser print support only. |
+| Email subscription | Use a mailbox you control and the dashboard subscription form. In local memory mode, confirm the result explicitly says demo-only and no email arrives. For deployed testing, confirm SNS subscription and then verify a real confirmation/delivery. | Local UI: no credentials; actual email requires deployed AWS/SNS and a controlled mailbox. |
+| Telegram integration | Use the public bot link only as navigation. For end-to-end testing, configure backend token/secret securely, set the HTTPS webhook, then try `/start`, `/schools`, `/subscribe <school_id>`, `/today`, and `/stop`; verify replies and subscription state. | Requires Telegram bot credentials, public HTTPS backend/webhook, and configured persistence for deployed behavior. Not verified by opening the link. |
+| Mobile responsiveness | Inspect dashboard, report, and poster at roughly 390px and 320px widths. Check for horizontal scrolling, overlapping forms, clipped labels, and usable controls. | No external service; test both demo and live states when available. |
+
+Automated test commands are listed in the README and
+[`docs/LOCAL_DEVELOPMENT.md`](LOCAL_DEVELOPMENT.md). Automated mocked tests
+cannot prove a live provider response or real notification delivery. For a
+full F1–F21 feature-by-feature procedure and API failure cases, continue below.
+
 ## Feature-by-feature checks
 
 ### F1 — Air forecast fetch and parse

@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a reproducible problem in School Air Alert.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include secrets, personal school/student data, or screenshots containing private information."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the page, API route, or command involved.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. Start the app...\n2. Open...\n3. Select...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized error output
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Python, Node, and browser versions
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials and private/personal information.
+          required: true
