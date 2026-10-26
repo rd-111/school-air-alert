@@ -70,6 +70,7 @@
   "smokeDemo": "Live satellite data is not shown in demo mode.",
   "smokeSelectSchool": "Select a registered school to check its saved location.",
   "smokeError": "The satellite hint could not be loaded. The air-quality forecast is still available.",
+  "smokeRetry": "Retry satellite check",
   "smokeUnconfigured": "NASA FIRMS is not configured on this backend.",
   "smokeUnavailable": "NASA FIRMS data is currently unavailable. No conclusion can be made from this result.",
   "smokeNoDetections": "NASA FIRMS returned no detections for this area in the last 24 hours. This does not prove that smoke is absent.",

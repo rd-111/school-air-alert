@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../i18n/en.json";
 import SmokeHint from "./SmokeHint.jsx";
@@ -90,6 +90,27 @@ describe("optional school smoke hint", () => {
     loadSchoolSmokeHint.mockRejectedValue(new Error("network unavailable"));
     renderHint();
     expect(await screen.findByText(en.smokeError)).toBeInTheDocument();
+  });
+
+  it("retries a failed request and renders the result when the provider recovers", async () => {
+    loadSchoolSmokeHint
+      .mockRejectedValueOnce(new Error("network unavailable"))
+      .mockResolvedValueOnce(hint);
+    renderHint();
+
+    expect(await screen.findByText(en.smokeError)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: en.smokeRetry }));
+
+    expect(await screen.findByText(en.smokeRelevant)).toBeInTheDocument();
+    await waitFor(() => expect(loadSchoolSmokeHint).toHaveBeenCalledTimes(2));
+  });
+
+  it("offers a retry when the optional provider reports unavailable", async () => {
+    loadSchoolSmokeHint.mockResolvedValue({ ...hint, status: "unavailable", detections: [] });
+    renderHint();
+
+    expect(await screen.findByText(en.smokeUnavailable)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: en.smokeRetry })).toBeInTheDocument();
   });
 
   it("shows the approved interim wording only when modeled transport is indicated", async () => {

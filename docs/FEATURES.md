@@ -278,6 +278,9 @@ hang was observed; its precise cause remains unknown. Live NASA FIRMS and
 Open-Meteo behavior, AWS deployment, and notification delivery are not
 verified. The original causal smoke-attribution sentence remains blocked
 pending approved evidence and methodology.
+The dashboard lets staff retry its optional satellite-context request after a
+temporary backend or provider failure without reloading the air-quality
+forecast.
 
 ### F21. Evening “tomorrow” alert
 

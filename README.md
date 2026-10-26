@@ -27,6 +27,8 @@ unrelated or illustrative image is presented as an application screenshot.
   integrations are configured.
 - View optional NASA FIRMS satellite detections with modeled wind context.
   This is not confirmation that smoke reaches a school.
+- Retry the optional satellite context check after a temporary backend or
+  provider failure without reloading the main air-quality forecast.
 
 The dashboard offers a clearly labelled demo mode. Live mode requests forecast
 data from the backend and does not silently substitute demo values when an API

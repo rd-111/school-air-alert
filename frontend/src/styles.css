@@ -427,6 +427,8 @@ button:disabled { cursor: wait; opacity: 0.65; }
 .smoke-heading h2 { margin: 0; font-size: clamp(1.15rem, 3vw, 1.4rem); }
 .smoke-icon { display: grid; flex: none; width: 2.8rem; height: 2.8rem; place-items: center; border-radius: 14px; background: var(--callout-neutral-bg); color: var(--primary); font-size: 1.35rem; }
 .smoke-intro { color: var(--muted); }
+.smoke-retry { min-height: 44px; margin: 0.15rem 0 0.6rem; border: 1px solid var(--accent); border-radius: 9px; padding: 0.55rem 0.85rem; background: var(--surface); color: var(--accent); font-weight: 700; cursor: pointer; }
+.smoke-retry:hover { background: var(--surface-soft); }
 .smoke-state { border-left: 4px solid var(--callout-neutral-border); border-radius: 0 10px 10px 0; padding: 0.7rem 0.85rem; background: var(--callout-neutral-bg); line-height: 1.55; }
 .smoke-relevant_detections, .smoke-transport_possible { border-left-color: var(--callout-attention-border); background: var(--callout-attention-bg); }
 .smoke-wind_indeterminate, .smoke-wind_unavailable, .smoke-stale, .smoke-unconfigured, .smoke-unavailable, .smoke-error { border-left-color: var(--callout-warm-border); background: var(--callout-warm-bg); }

@@ -4,6 +4,7 @@ import { loadSchoolSmokeHint } from "../api/client.js";
 export default function SmokeHint({ schoolId, dataMode, onSchoolLocation, labels }) {
   const [state, setState] = useState("loading");
   const [hint, setHint] = useState(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -27,7 +28,7 @@ export default function SmokeHint({ schoolId, dataMode, onSchoolLocation, labels
       if (active) setState("error");
     });
     return () => { active = false; };
-  }, [dataMode, onSchoolLocation, schoolId]);
+  }, [attempt, dataMode, onSchoolLocation, schoolId]);
 
   return (
     <section className="panel smoke-hint" aria-labelledby="smoke-hint-title" aria-busy={state === "loading"}>
@@ -44,6 +45,11 @@ export default function SmokeHint({ schoolId, dataMode, onSchoolLocation, labels
       {state === "demo" && <p className="smoke-state" role="status">{labels.smokeDemo}</p>}
       {state === "no_school" && <p className="smoke-state" role="status">{labels.smokeSelectSchool}</p>}
       {state === "error" && <p className="smoke-state smoke-unavailable" role="alert">{labels.smokeError}</p>}
+      {["error", "unavailable"].includes(state) && (
+        <button className="smoke-retry" type="button" onClick={() => setAttempt((value) => value + 1)}>
+          {labels.smokeRetry}
+        </button>
+      )}
       {hint && <SmokeHintDetails hint={hint} labels={labels} state={state} />}
 
       <p className="smoke-disclaimer">{labels.smokeDisclaimer}</p>
